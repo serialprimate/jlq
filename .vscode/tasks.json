@@ -1,0 +1,209 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cmake",
+			"label": "cmake: build all",
+			"command": "build",
+			"targets": [
+				"all"
+			],
+			"preset": "${command:cmake.activeBuildPresetName}",
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": true
+			}
+		},
+		{
+			"type": "cmake",
+			"label": "cmake: clean",
+			"command": "clean",
+			"targets": [],
+			"preset": "${command:cmake.activeBuildPresetName}",
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": true
+			}
+		},
+		{
+			"type": "cmake",
+			"label": "cmake: test",
+			"command": "test",
+			"targets": [],
+			"preset": "${command:cmake.activeTestPresetName}",
+			"group": {
+				"kind": "test",
+				"isDefault": false
+			},
+			"problemMatcher": [],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": true
+			}
+		},
+		{
+			"type": "cmake",
+			"label": "cmake: configure",
+			"command": "configure",
+			"targets": [],
+			"preset": "${command:cmake.activeConfigurePresetName}",
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": true
+			}
+		},
+		{
+			"type": "shell",
+			"label": "shell: cmake build all",
+			"command": "/usr/bin/cmake --build --verbose --preset ${command:cmake.activeBuildPresetName} --target all",
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": true
+			}
+		},
+		{
+			"type": "shell",
+			"label": "shell: cmake build clean",
+			"command": "/usr/bin/cmake --build --verbose --preset ${command:cmake.activeBuildPresetName} --target clean",
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": true
+			}
+		},
+		{
+			"type": "shell",
+			"label": "shell: ctest",
+			"command": "/usr/bin/ctest --preset ${command:cmake.activeTestPresetName} --output-on-failure",
+			"group": {
+				"kind": "test",
+				"isDefault": false
+			},
+			"problemMatcher": [],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": true
+			}
+		},
+		{
+			"type": "shell",
+			"label": "shell: cmake reconfigure",
+			"command": "if [ -d build ]; then rm -rf build; fi && cmake --preset ${command:cmake.activeConfigurePresetName}",
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"problemMatcher": [],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": true
+			}
+		},
+		{
+			"type": "process",
+			"label": "process: clang-format",
+			"command": "/usr/bin/clang-format",
+			"args": [
+				"-i",
+				"${file}"
+			],
+			"problemMatcher": [],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": true
+			}
+		},
+		{
+			"type": "process",
+			"label": "process: clang-tidy",
+			"command": "/usr/bin/clang-tidy",
+			"args": [
+				"-p",
+				"${workspaceFolder}/build/${command:cmake.activeConfigurePresetName}",
+				"-header-filter=.*",
+				"${file}"
+			],
+			"problemMatcher": [
+				"$gcc"
+			],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": true
+			}
+		}
+	]
+}
