@@ -1,0 +1,89 @@
+FROM ubuntu:latest
+
+# Avoid prompts from apt
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Enable strict mode (exit on error, exit on unset variable, error on pipeline)
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+
+# Upgrade packages
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install general packages
+# - Freshen CA certificates
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    git \
+    gnupg \
+    jq \
+    less \
+    lsb-release \
+    sudo \
+    zip unzip \
+    vim \
+    wget \
+    && rm -rf /var/lib/apt/lists/* \
+    && update-ca-certificates --fresh
+
+# Set required docker setup parameters
+ARG DOCKER_GID=989
+
+# Install Docker CLI from Docker's official repository
+# - Add the docker group with the specified GID
+RUN install -m 0755 -d /etc/apt/keyrings \
+    && curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc \
+    && chmod a+r /etc/apt/keyrings/docker.asc \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends docker-ce-cli docker-buildx-plugin docker-compose-plugin \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid ${DOCKER_GID} docker
+
+# Install C++ development packages
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    binutils \
+    gcc g++ gdb \
+    make cmake \
+    pkg-config \
+    clang-tidy clang-format \
+    valgrind \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set required user setup parameters
+ARG USERNAME=dev
+# Generate with `openssl passwd -1 -stdin <<< '<password>'`
+ARG USER_PWCRYPT='$1$O6PU/jrk$o.O1GPhd2hH1qyLVb.1e1.'
+ARG USER_UID=1000
+ARG USER_GID=${USER_UID}
+
+# Setup the user:
+# - Remove any existing user/group with the same UID/GID if they exist
+# - Create a new user and group
+# - Add user to the docker group
+# - Set up sudo permissions for the user
+# - Ensure the sudoers file has the correct permissions
+RUN if id -u ${USER_UID} >/dev/null 2>&1; then \
+    EXISTING_USER=$(getent passwd ${USER_UID} | cut -d: -f1); \
+    userdel -r ${EXISTING_USER} || true; \
+    fi && \
+    if getent group ${USER_GID} >/dev/null 2>&1; then \
+    EXISTING_GROUP=$(getent group ${USER_GID} | cut -d: -f1); \
+    groupdel ${EXISTING_GROUP} || true; \
+    fi && \
+    groupadd --gid ${USER_GID} ${USERNAME} \
+    && useradd --uid ${USER_UID} --gid ${USER_GID} --create-home --password ${USER_PWCRYPT} ${USERNAME} \
+    && usermod -aG docker ${USERNAME} \
+    && echo ${USERNAME} ALL=\(root\) ALL > /etc/sudoers.d/${USERNAME} \
+    && chmod 0440 /etc/sudoers.d/${USERNAME}
+
+# Set the default user
+USER ${USERNAME}
+
+# Set the working directory
+WORKDIR /code
