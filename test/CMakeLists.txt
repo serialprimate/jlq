@@ -1,3 +1,3 @@
 
-add_subdirectory(cli_tests)
-add_subdirectory(mapped_file_tests)
+add_subdirectory(libs)
+add_subdirectory(apps)

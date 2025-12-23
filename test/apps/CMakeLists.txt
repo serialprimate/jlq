@@ -1,0 +1,2 @@
+add_subdirectory(cli_tests)
+add_subdirectory(mapped_file_tests)
