@@ -37,6 +37,7 @@ speed of the underlying hardware.
 * **Memory Management:** Use RAII; avoid raw pointers for resource ownership.
 * **Performance:** Minimise data copying; use `std::string_view` for lookups.
 * **Build System:** CMake with `vcpkg` for dependency management.
+* **Maintainability:** Modular code structure with clear separation of concerns.
 
 ### 2.3 CLI Contract (MVP)
 
