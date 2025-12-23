@@ -3,6 +3,7 @@
 #include <cerrno>
 #include <cstring>
 #include <stdexcept>
+#include <system_error>
 #include <utility>
 
 #include <fcntl.h>
@@ -16,10 +17,9 @@ namespace jlq
     namespace
     {
 
-        [[noreturn]] void throw_errno(const char *what)
+        [[noreturn]] void throwErrno(const char *what, int err)
         {
-            const int err = errno;
-            throw std::runtime_error(std::string(what) + ": " + std::strerror(err));
+            throw std::system_error(std::error_code(err, std::generic_category()), what);
         }
 
     } // namespace
@@ -65,12 +65,12 @@ namespace jlq
         size_ = 0;
     }
 
-    MappedFile MappedFile::open_readonly(const std::string &path)
+    MappedFile MappedFile::openReadonly(const std::string &path)
     {
         const int fd = ::open(path.c_str(), O_RDONLY | O_CLOEXEC);
         if (fd == -1)
         {
-            throw_errno("open");
+            throwErrno("open", errno);
         }
 
         struct stat st{};
@@ -78,8 +78,7 @@ namespace jlq
         {
             const int err = errno;
             ::close(fd);
-            errno = err;
-            throw_errno("fstat");
+            throwErrno("fstat", err);
         }
 
         if (st.st_size < 0)
@@ -99,8 +98,7 @@ namespace jlq
         {
             const int err = errno;
             ::close(fd);
-            errno = err;
-            throw_errno("mmap");
+            throwErrno("mmap", err);
         }
 
         return MappedFile{fd, mapping, size};

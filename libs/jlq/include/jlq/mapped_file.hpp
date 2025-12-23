@@ -20,7 +20,7 @@ namespace jlq
 
         ~MappedFile();
 
-        static MappedFile open_readonly(const std::string &path);
+        static MappedFile openReadonly(const std::string &path);
 
         [[nodiscard]] std::span<const std::byte> bytes() const noexcept;
         [[nodiscard]] std::size_t size() const noexcept;

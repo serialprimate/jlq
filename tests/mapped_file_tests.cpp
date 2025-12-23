@@ -9,9 +9,9 @@
 JLQ_TEST_CASE("MappedFile maps and exposes bytes")
 {
     jlq::test::TempFile tmp("jlq_test_", ".txt");
-    tmp.write_all("hello\nworld\n");
+    tmp.writeAll("hello\nworld\n");
 
-    jlq::MappedFile mf = jlq::MappedFile::open_readonly(tmp.path().string());
+    jlq::MappedFile mf = jlq::MappedFile::openReadonly(tmp.path().string());
     JLQ_CHECK_EQ(mf.size(), static_cast<std::size_t>(12));
     JLQ_CHECK(!mf.empty());
 
@@ -30,9 +30,9 @@ JLQ_TEST_CASE("MappedFile maps and exposes bytes")
 JLQ_TEST_CASE("MappedFile supports empty files")
 {
     jlq::test::TempFile tmp("jlq_test_", ".txt");
-    tmp.write_all("");
+    tmp.writeAll("");
 
-    jlq::MappedFile mf = jlq::MappedFile::open_readonly(tmp.path().string());
+    jlq::MappedFile mf = jlq::MappedFile::openReadonly(tmp.path().string());
     JLQ_CHECK_EQ(mf.size(), static_cast<std::size_t>(0));
     JLQ_CHECK(mf.empty());
     JLQ_CHECK_EQ(mf.bytes().size(), static_cast<std::size_t>(0));

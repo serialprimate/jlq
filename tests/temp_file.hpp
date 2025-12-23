@@ -78,7 +78,7 @@ namespace jlq::test
 
         [[nodiscard]] const std::filesystem::path &path() const noexcept { return path_; }
 
-        void write_all(std::string_view contents) const
+        void writeAll(std::string_view contents) const
         {
             std::ofstream out(path_, std::ios::binary | std::ios::trunc);
             JLQ_CHECK(out.good());

@@ -12,7 +12,7 @@ namespace jlq
     namespace
     {
 
-        void print_usage(std::ostream &os)
+        void printUsage(std::ostream &os)
         {
             os << "Usage: jlq <file> [--help]\n";
         }
@@ -24,15 +24,15 @@ namespace jlq
         // args includes argv[0]
         if (args.size() <= 1)
         {
-            print_usage(std::cerr);
+            printUsage(std::cerr);
             return static_cast<int>(ExitCode::UsageError);
         }
 
         for (std::size_t i = 1; i < args.size(); ++i)
         {
-            if (args[i] == "--help" || args[i] == "-h")
+            if (args[i] == "--help")
             {
-                print_usage(std::cout);
+                printUsage(std::cout);
                 return static_cast<int>(ExitCode::Success);
             }
         }
@@ -41,20 +41,20 @@ namespace jlq
         const std::string_view file = args[1];
         if (file.empty() || file.starts_with('-'))
         {
-            print_usage(std::cerr);
+            printUsage(std::cerr);
             return static_cast<int>(ExitCode::UsageError);
         }
 
         if (args.size() != 2)
         {
             // Avoid silently accepting future flags until implemented.
-            print_usage(std::cerr);
+            printUsage(std::cerr);
             return static_cast<int>(ExitCode::UsageError);
         }
 
         try
         {
-            MappedFile::open_readonly(std::string(file));
+            MappedFile::openReadonly(std::string(file));
         }
         catch (const std::exception &e)
         {
