@@ -47,14 +47,20 @@ Run the CLI:
 
 ## Test
 
+Run all tests with CTest:
+
 ```bash
 ctest --preset debug-test --output-on-failure
 ```
 
-Or run the test executable directly:
+Or run individual test executables directly:
 
 ```bash
-./build/debug/bin/jlq_tests
+# CLI tests
+./build/debug/bin/cli_tests
+
+# Mapped file tests
+./build/debug/bin/mapped_file_tests
 ```
 
 ## Clean
