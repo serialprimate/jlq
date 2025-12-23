@@ -1,7 +1,7 @@
 #include "jlq/cli.hpp"
 
-#include "jlq/exit_codes.hpp"
-#include "jlq/mapped_file.hpp"
+#include "exit_codes.hpp"
+#include "MappedFile.hpp"
 
 #include <iostream>
 #include <string>

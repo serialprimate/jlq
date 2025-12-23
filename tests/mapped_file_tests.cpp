@@ -1,7 +1,7 @@
-#include "temp_file.hpp"
+#include "TempFile.hpp"
 #include "test_harness.hpp"
 
-#include "jlq/mapped_file.hpp"
+#include "MappedFile.hpp"
 
 #include <cstddef>
 #include <string>

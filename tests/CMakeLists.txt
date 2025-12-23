@@ -5,7 +5,8 @@ add_executable(
   cli_tests.cpp)
 
 target_include_directories(jlq_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-                                            ${PROJECT_SOURCE_DIR}/libs/jlq/include)
+                                            ${PROJECT_SOURCE_DIR}/libs/jlq/include
+                                            ${PROJECT_SOURCE_DIR}/libs/jlq/src)
 
 target_link_libraries(jlq_tests PRIVATE jlq::lib)
 

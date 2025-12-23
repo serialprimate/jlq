@@ -1,4 +1,4 @@
-#include "jlq/mapped_file.hpp"
+#include "MappedFile.hpp"
 
 #include <cerrno>
 #include <cstring>
@@ -73,7 +73,9 @@ namespace jlq
             throwErrno("open", errno);
         }
 
-        struct stat st{};
+        struct stat st
+        {
+        };
         if (::fstat(fd, &st) != 0)
         {
             const int err = errno;
