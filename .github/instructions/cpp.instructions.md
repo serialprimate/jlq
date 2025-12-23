@@ -1,10 +1,25 @@
---
+---
 name: C++ Development Instructions
 description: Modern C++23 standards and best practices
-applyTo: "**/*.{cpp,cc,cxx,hpp,h,hxx}"
+applyTo: "**/*.cpp,**/*.cc,**/*.cxx,**/*.hpp,**/*.h,**/*.hxx"
 ---
 
 # C++ Development Instructions
+
+## Naming Conventions (LLVM/Clang-aligned, with PascalCase type filenames)
+
+- **Filenames:**
+  - For files that define a primary type/class/struct/enum, use PascalCase (e.g., `MappedFile.hpp`, `MappedFile.cpp`).
+  - For utility, test, or non-type files, use lower_snake_case (e.g., `test_harness.hpp`, `cli_tests.cpp`).
+
+- **Types (class/struct/enum):** PascalCase (e.g., `MappedFile`, `ExitCode`).
+- **Functions:** camelCase (e.g., `openReadonly`, `reset`, `printUsage`).
+- **Variables:** camelCase (e.g., `filePath`, `mappingPtr`, `bufferSize`).
+- **Constants:** PascalCase or ALL_CAPS (e.g., `MaxBufferSize`, `DEFAULT_TIMEOUT`).
+- **Macros:** ALL_CAPS with underscores (e.g., `JLQ_TEST_CASE`).
+- **Namespaces:** camelCase preferred (e.g., `jlq`, `testHelpers`).
+
+> These conventions match LLVM/Clang defaults, except for PascalCase filenames for type/class headers and implementations. Consistency is required across all new and refactored code.
 
 ## Language Standards & Features
 - Use **C++23** as the default standard (or C++20 as minimum)
