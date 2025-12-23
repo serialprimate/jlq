@@ -1,8 +1,6 @@
 #include "TempFile.hpp"
 #include "test_harness.hpp"
-
 #include "MappedFile.hpp"
-
 #include <cstddef>
 #include <string>
 

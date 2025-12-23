@@ -82,5 +82,5 @@ add_subdirectory(libs/jlq)
 add_subdirectory(apps/jlq)
 
 if(BUILD_TESTING)
-  add_subdirectory(tests)
+  add_subdirectory(test)
 endif()

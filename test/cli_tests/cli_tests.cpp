@@ -1,21 +1,17 @@
 #include "TempFile.hpp"
 #include "test_harness.hpp"
-
 #include "jlq/cli.hpp"
-
 #include <string>
 #include <string_view>
 #include <vector>
 
 namespace
 {
-
     int runArgs(std::initializer_list<std::string_view> args)
     {
         std::vector<std::string_view> v(args);
         return jlq::run(std::span<const std::string_view>(v));
     }
-
 } // namespace
 
 JLQ_TEST_CASE("CLI returns usage error on missing args")
