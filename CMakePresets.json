@@ -1,0 +1,119 @@
+{
+    "version": 8,
+    "configurePresets": [
+        {
+            "name": "base-configure",
+            "hidden": true,
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+                "CMAKE_CXX_STANDARD": "23",
+                "CMAKE_CXX_EXTENSIONS": false,
+                "ENABLE_ASAN": false,
+                "ENABLE_UBSAN": false,
+                "ENABLE_TSAN": false
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "warnings": {
+                "dev": false,
+                "deprecated": true,
+                "uninitialized": true,
+                "unusedCli": true
+            },
+            "errors": {
+                "dev": false,
+                "deprecated": true
+            }
+        },
+        {
+            "name": "debug",
+            "displayName": "Debug",
+            "inherits": "base-configure",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "release",
+            "displayName": "Release",
+            "inherits": "base-configure",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "relwithdebinfo",
+            "displayName": "RelWithDebInfo",
+            "inherits": "base-configure",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "base-build",
+            "hidden": true,
+            "jobs": 0
+        },
+        {
+            "name": "debug-build",
+            "displayName": "Debug Build",
+            "inherits": "base-build",
+            "configurePreset": "debug",
+            "verbose": true
+        },
+        {
+            "name": "release-build",
+            "displayName": "Release Build",
+            "inherits": "base-build",
+            "configurePreset": "release",
+            "verbose": false
+        },
+        {
+            "name": "relwithdebinfo-build",
+            "displayName": "RelWithDebInfo Build",
+            "inherits": "base-build",
+            "configurePreset": "relwithdebinfo",
+            "verbose": true
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "base-test",
+            "hidden": true,
+            "output": {
+                "outputOnFailure": true,
+                "verbosity": "verbose"
+            },
+            "execution": {
+                "noTestsAction": "error",
+                "stopOnFailure": true
+            }
+        },
+        {
+            "name": "debug-test",
+            "displayName": "Debug Test",
+            "inherits": "base-test",
+            "configurePreset": "debug"
+        },
+        {
+            "name": "release-test",
+            "displayName": "Release Test",
+            "inherits": "base-test",
+            "configurePreset": "release"
+        },
+        {
+            "name": "relwithdebinfo-test",
+            "displayName": "RelWithDebInfo Test",
+            "inherits": "base-test",
+            "configurePreset": "relwithdebinfo"
+        }
+    ]
+}
