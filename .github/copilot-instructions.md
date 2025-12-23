@@ -11,11 +11,13 @@
   - `src/mapped_file.cpp`, `include/jlq/mapped_file.hpp`: Memory-mapped file abstraction
   - `include/jlq/exit_codes.hpp`: Standardized exit codes for CLI
 - `apps/jlq/`: CLI executable (`main.cpp`)
-- `tests/`: Minimal custom test harness, test cases for CLI and file mapping
+- `test/`: Test suite
+  - `apps/`: Test executables (e.g., `cli_tests`, `mapped_file_tests`)
+  - `libs/test_utils/`: Shared test utilities (`test_harness.hpp`, `TempFile.hpp`)
 
 ## Build & Test Workflow
 - **Presets:** All builds use CMake presets. Configure with `cmake --preset debug`, build with `cmake --build --preset debug-build`.
-- **Testing:** Run tests with `ctest --preset debug-test --output-on-failure` or directly via `./build/debug/bin/jlq_tests`.
+- **Testing:** Run tests with `ctest --preset debug-test --output-on-failure` or directly via `./build/debug/bin/cli_tests` and `./build/debug/bin/mapped_file_tests`.
 - **Sanitizers:** Enable with `-DENABLE_ASAN=ON` (AddressSanitizer), `-DENABLE_UBSAN=ON`, or `-DENABLE_TSAN=ON` for debug builds only. Do not use Valgrind and ASAN together.
 - **Strict Warnings:** Warnings are treated as errors by default. Disable with `-DJLQ_ENABLE_WERROR=OFF`.
 - **No in-source builds:** Building in the source directory is forbidden by CMakeLists.txt.
@@ -25,12 +27,13 @@
 - **Error handling:** Uses RAII and exceptions for resource management and error propagation. Exit codes are standardized.
 - **Testing:** Uses a custom test harness (`test_harness.hpp`) with `JLQ_TEST_CASE` and `JLQ_CHECK_EQ` macros. Test output is printed to stdout.
 - **Temporary files:** Tests use `TempFile` utility for safe, auto-cleaned temp files.
+- **Test Utilities:** Shared test code is located in `test/libs/test_utils` and exposed via the `jlq::test_utils` target.
 
 ## Extending Functionality
 - Add new CLI options and logic in `libs/jlq/src/cli.cpp` and update `run()` in `cli.hpp`.
 - Implement JSON path traversal and filtering in future phases, following the roadmap in `PRD.md`.
-- All new features should be covered by tests in `tests/` using the custom harness.
-- For each change, enable strict warnings, use relevant sanitizers and ensure no warnings/errors.
+- All new features should be covered by tests in `test/` using the custom harness.
+- For each change, enable strict warnings, use sanitizers and ensure no warnings/errors.
 
 ## Integration & Dependencies
 - Uses `simdjson` (planned) for fast JSON parsing and `mmap` for file access.
