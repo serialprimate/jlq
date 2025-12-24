@@ -93,3 +93,28 @@ cmake --preset debug -DENABLE_ASAN=ON
 cmake --build --preset debug-build
 ctest --preset debug-test --output-on-failure
 ```
+
+## Benchmarking
+
+Generate a deterministic dataset:
+
+```bash
+./scripts/gen_jsonl.py --out /mnt/nvme/jlq_10g.jsonl --lines 20000000 --seed 1 \
+	--path network.http.status --type number --value 500 --match-rate 0.01
+```
+
+Build (recommended: release):
+
+```bash
+cmake --preset release
+cmake --build --preset release-build
+```
+
+Run the benchmark runner:
+
+```bash
+./scripts/bench.py --jlq ./build/release/bin/jlq --file /mnt/nvme/jlq_10g.jsonl \
+	--path network.http.status --type number --value 500 --runs 7 --warmups 1
+```
+
+See [docs/benchmarking.md](docs/benchmarking.md) for methodology and reporting guidance.
