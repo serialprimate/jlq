@@ -66,9 +66,9 @@ Deliverables:
 
 ## 3) Dependency + build wiring (`simdjson`)
 
-Add `simdjson` as a dependency (prefer project’s existing dependency strategy):
-- If `vcpkg.json` exists, add `simdjson` there and wire via CMake.
-- Otherwise, use a consistent CMake approach already in the repo.
+Add `simdjson` as a dependency using **vcpkg** in manifest mode:
+- Add `simdjson` to `vcpkg.json`.
+- Wire via `find_package(simdjson CONFIG REQUIRED)` in `libs/jlq/CMakeLists.txt`.
 
 Deliverables:
 - `simdjson` is linked to the core library target.
@@ -80,25 +80,25 @@ Deliverables:
 
 Implement Phase 2 logic in the library, not inside CLI parsing.
 
-Recommended minimal modules:
+Recommended minimal modules and locations:
 
-- `QueryConfig` (new)
+- **Query Configuration** (`libs/jlq/include/jlq/query_config.hpp`)
   - `ValueType { string, number, bool, null }`
   - Parsed representation of `--value` appropriate to type
   - `strict` and `threads` fields
 
-- Path parsing (new)
+- **Path Parsing** (`libs/jlq/include/jlq/path.hpp`, `libs/jlq/src/path.cpp`)
   - Parse dot-path into segments.
   - Enforce: no empty segments, no leading/trailing dots.
 
-- Line scanning (new)
+- **Line Scanning** (`libs/jlq/include/jlq/line_scanner.hpp`, `libs/jlq/src/line_scanner.cpp`)
   - Iterate over the mapped bytes and split on `\n`.
   - Preserve whether a `\n` delimiter existed (for correct output newline preservation).
   - CRLF tolerance: if line ends with a single `\r`, trim it before parsing.
   - Ignore empty lines.
   - Enforce max line length of 64 MiB (excluding trailing `\n`).
 
-- Query engine (new)
+- **Query Engine** (`libs/jlq/include/jlq/query.hpp`, `libs/jlq/src/query.cpp`)
   - For each candidate line: copy into scratch buffer + `SIMDJSON_PADDING`, zero-pad.
   - Parse using `simdjson::ondemand::parser`.
   - Traverse by path segments.
