@@ -84,3 +84,14 @@ add_subdirectory(apps/jlq)
 if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
+
+# Packaging
+set(CPACK_PACKAGE_VENDOR "jlq")
+set(CPACK_PACKAGE_CONTACT "https://github.com/jlq/jlq")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+set(CPACK_GENERATOR "TGZ")
+
+# Explicitly label the architecture in the package name
+set(CPACK_SYSTEM_NAME "${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+
+include(CPack)

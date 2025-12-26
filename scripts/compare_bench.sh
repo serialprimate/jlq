@@ -6,7 +6,12 @@ readonly LINES=1000000
 readonly PATH_QUERY="user.id"
 readonly VALUE="42"
 readonly FILE="bench_data.jsonl"
-readonly JLQ_BIN="./build/release/bin/jlq"
+readonly JLQ_BIN="${1:-./build/release/bin/jlq}"
+
+if [[ ! -f "$JLQ_BIN" ]]; then
+    printf "Error: jlq binary not found at %s\n" "$JLQ_BIN"
+    exit 1
+fi
 
 cleanup() {
     if [[ -f "$FILE" ]]; then

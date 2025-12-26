@@ -4,17 +4,27 @@ import time
 from pathlib import Path
 from typing import List
 
-def run_jlq(args: List[str], binary: str = "./build/debug/bin/jlq") -> subprocess.CompletedProcess[str]:
+import os
+
+def run_jlq(args: List[str], binary: str) -> subprocess.CompletedProcess[str]:
     """Runs the jlq binary with the given arguments and returns the result."""
+    binary_path = Path(binary)
+    if not binary_path.exists():
+        raise FileNotFoundError(
+            f"jlq binary not found at {binary_path.absolute()}. "
+            "Please build the project or provide the correct path via --jlq."
+        )
+
     result = subprocess.run(
-        [binary] + args,
+        [str(binary_path)] + args,
         capture_output=True,
         text=True
     )
     return result
 
-def test_basic_match(tmp_path: Path) -> None:
+def test_basic_match(tmp_path: Path, jlq_bin: str | None) -> None:
     """Tests basic matching functionality with a generated JSONL file."""
+    binary = jlq_bin or "./build/debug/bin/jlq"
     jsonl_file = tmp_path / "test.jsonl"
     subprocess.run([
         "python3", "scripts/gen_jsonl.py",
@@ -27,12 +37,13 @@ def test_basic_match(tmp_path: Path) -> None:
         "--out", str(jsonl_file)
     ], check=True)
 
-    result = run_jlq([str(jsonl_file), "--path", "user.id", "--value", "42", "--type", "number"])
+    result = run_jlq([str(jsonl_file), "--path", "user.id", "--value", "42", "--type", "number"], binary=binary)
     assert result.returncode == 0
     assert len(result.stdout.splitlines()) == 100
 
-def test_strict_mode_fails_on_malformed(tmp_path: Path) -> None:
+def test_strict_mode_fails_on_malformed(tmp_path: Path, jlq_bin: str | None) -> None:
     """Tests that --strict mode correctly fails on malformed JSON lines."""
+    binary = jlq_bin or "./build/debug/bin/jlq"
     jsonl_file = tmp_path / "malformed.jsonl"
     subprocess.run([
         "python3", "scripts/gen_jsonl.py",
@@ -43,15 +54,16 @@ def test_strict_mode_fails_on_malformed(tmp_path: Path) -> None:
     ], check=True)
 
     # Without strict, should succeed (skipping bad lines)
-    result = run_jlq([str(jsonl_file), "--path", "a", "--value", "b"])
+    result = run_jlq([str(jsonl_file), "--path", "a", "--value", "b"], binary=binary)
     assert result.returncode == 0
 
     # With strict, should fail with exit code 3
-    result_strict = run_jlq([str(jsonl_file), "--path", "a", "--value", "b", "--strict"])
+    result_strict = run_jlq([str(jsonl_file), "--path", "a", "--value", "b", "--strict"], binary=binary)
     assert result_strict.returncode == 3
 
-def test_oversized_lines_skipped(tmp_path: Path) -> None:
+def test_oversized_lines_skipped(tmp_path: Path, jlq_bin: str | None) -> None:
     """Tests that oversized lines are skipped in default mode."""
+    binary = jlq_bin or "./build/debug/bin/jlq"
     jsonl_file = tmp_path / "oversized.jsonl"
     subprocess.run([
         "python3", "scripts/gen_jsonl.py",
@@ -61,11 +73,12 @@ def test_oversized_lines_skipped(tmp_path: Path) -> None:
         "--out", str(jsonl_file)
     ], check=True)
 
-    result = run_jlq([str(jsonl_file), "--path", "a", "--value", "b"])
+    result = run_jlq([str(jsonl_file), "--path", "a", "--value", "b"], binary=binary)
     assert result.returncode == 0
 
-def test_crlf_handling(tmp_path: Path) -> None:
+def test_crlf_handling(tmp_path: Path, jlq_bin: str | None) -> None:
     """Tests that CRLF line endings are handled correctly."""
+    binary = jlq_bin or "./build/debug/bin/jlq"
     jsonl_file = tmp_path / "crlf.jsonl"
     subprocess.run([
         "python3", "scripts/gen_jsonl.py",
@@ -78,16 +91,18 @@ def test_crlf_handling(tmp_path: Path) -> None:
         "--out", str(jsonl_file)
     ], check=True)
 
-    result = run_jlq([str(jsonl_file), "--path", "key", "--value", "val"])
+    result = run_jlq([str(jsonl_file), "--path", "key", "--value", "val"], binary=binary)
     assert result.returncode == 0
     assert len(result.stdout.splitlines()) == 50
 
-def test_performance_smoke(tmp_path: Path) -> None:
+def test_performance_smoke(tmp_path: Path, jlq_bin: str | None) -> None:
     """A smoke test for performance to ensure no major regressions."""
     # Use release binary if it exists, otherwise debug
-    binary = "./build/release/bin/jlq"
-    if not Path(binary).exists():
-        binary = "./build/debug/bin/jlq"
+    binary = jlq_bin
+    if binary is None:
+        binary = "./build/release/bin/jlq"
+        if not Path(binary).exists():
+            binary = "./build/debug/bin/jlq"
 
     jsonl_file = tmp_path / "perf.jsonl"
     lines = 100_000

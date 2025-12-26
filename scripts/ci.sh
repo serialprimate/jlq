@@ -8,7 +8,17 @@ printf "Starting CI pipeline...\n"
 # 1. Clean
 "$ROOT_DIR/scripts/clean.sh"
 
-# 2. Run Debug Workflow (Configure, Build, Test)
+# 2. Setup Python virtual environment
+if [[ ! -d "$ROOT_DIR/.venv" ]]; then
+    printf "Setting up Python virtual environment...\n"
+    python3 -m venv "$ROOT_DIR/.venv"
+    source "$ROOT_DIR/.venv/bin/activate"
+    pip install pytest
+else
+    source "$ROOT_DIR/.venv/bin/activate"
+fi
+
+# 3. Run Debug Workflow (Configure, Build, Test)
 printf "Running Debug workflow...\n"
 cmake --workflow --preset debug-workflow
 
@@ -17,8 +27,8 @@ printf "Running CI workflow (Release)...\n"
 cmake --workflow --preset ci-workflow
 
 # 4. Run Python integration tests
-printf "Running Python integration tests...\n"
+printf "Running Python integration tests (Release)...\n"
 source "$ROOT_DIR/.venv/bin/activate"
-pytest "$ROOT_DIR/test/integration_tests.py"
+pytest "$ROOT_DIR/test/integration_tests.py" --jlq "$ROOT_DIR/build/release/bin/jlq"
 
 printf "CI pipeline complete.\n"

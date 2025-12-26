@@ -18,3 +18,13 @@ target_compile_features(jlq_lib PUBLIC cxx_std_23)
 target_link_libraries(jlq_lib PRIVATE simdjson::simdjson)
 
 jlq_apply_strict_warnings(jlq_lib)
+
+include(GNUInstallDirs)
+install(
+  TARGETS jlq_lib
+  EXPORT jlq-targets
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

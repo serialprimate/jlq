@@ -28,4 +28,8 @@ fi
 printf "Removing temporary .jsonl files...\n"
 find "$ROOT_DIR" -maxdepth 1 -name "*.jsonl" -delete
 
+# Remove __pycache__ directories
+printf "Removing __pycache__ directories...\n"
+find "$ROOT_DIR" -name "__pycache__" -type d -exec rm -rf {} +
+
 printf "Clean complete.\n"
