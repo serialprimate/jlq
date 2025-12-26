@@ -161,5 +161,86 @@
             "inherits": "base-test",
             "configurePreset": "relwithdebinfo"
         }
+    ],
+    "packagePresets": [
+        {
+            "name": "base-package",
+            "hidden": true,
+            "generators": [
+                "TGZ"
+            ]
+        },
+        {
+            "name": "debug-package",
+            "displayName": "Debug Package",
+            "inherits": "base-package",
+            "configurePreset": "debug"
+        },
+        {
+            "name": "release-package",
+            "displayName": "Release Package",
+            "inherits": "base-package",
+            "configurePreset": "release"
+        }
+    ],
+    "workflowPresets": [
+        {
+            "name": "debug-workflow",
+            "displayName": "Debug Workflow",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "debug"
+                },
+                {
+                    "type": "build",
+                    "name": "debug-build"
+                },
+                {
+                    "type": "test",
+                    "name": "debug-test"
+                }
+            ]
+        },
+        {
+            "name": "release-workflow",
+            "displayName": "Release Workflow",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "release"
+                },
+                {
+                    "type": "build",
+                    "name": "release-build"
+                },
+                {
+                    "type": "test",
+                    "name": "release-test"
+                }
+            ]
+        },
+        {
+            "name": "ci-workflow",
+            "displayName": "CI Workflow",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "release"
+                },
+                {
+                    "type": "build",
+                    "name": "release-build"
+                },
+                {
+                    "type": "test",
+                    "name": "release-test"
+                },
+                {
+                    "type": "package",
+                    "name": "release-package"
+                }
+            ]
+        }
     ]
 }

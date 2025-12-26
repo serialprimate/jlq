@@ -15,7 +15,8 @@ For convenience, several scripts are provided to automate the workflow:
 - **Clean**: `./scripts/clean.sh` (removes `build/`, `.venv/`, and test artifacts)
 - **Build**: `./scripts/build.sh [preset]` (defaults to `debug`)
 - **Test**: `./scripts/test.sh [preset]` (runs C++ unit tests and Python integration tests)
-- **CI**: `./scripts/ci.sh` (runs clean, build, and test for both debug and release)
+- **Package**: `./scripts/package.sh [preset]` (defaults to `release`)
+- **CI**: `./scripts/ci.sh` (runs clean, and then debug and release workflows)
 
 ## Configure
 
@@ -47,6 +48,33 @@ This generates build output under:
 
 ```bash
 cmake --build --preset debug-build
+```
+
+## Workflows
+
+Workflows combine configure, build, and test steps into a single command:
+
+```bash
+cmake --workflow --preset debug-workflow
+```
+
+Available workflows:
+- `debug-workflow`: Configure (Debug), Build, Test
+- `release-workflow`: Configure (Release), Build, Test
+- `ci-workflow`: Configure (Release), Build, Test, Package
+
+## Package
+
+To create a distributable package:
+
+```bash
+cmake --build --preset release-build --target package
+```
+
+Or use the script:
+
+```bash
+./scripts/package.sh
 ```
 
 Artifacts are placed under:

@@ -21,9 +21,14 @@
   - `integration_tests.py`: Python-based integration tests using `pytest`
 
 ## Build & Test Workflow
-- **Scripts:** Preferred workflow uses `./scripts/build.sh`, `./scripts/test.sh`, and `./scripts/clean.sh`.
-- **CI:** `./scripts/ci.sh` runs the full pipeline (Clean, Build/Test Debug, Build/Test Release).
-- **Presets:** All builds use CMake presets. Configure with `cmake --preset debug`, build with `cmake --build --preset debug-build`.
+- **Scripts:** Preferred workflow uses `./scripts/build.sh`, `./scripts/test.sh`, `./scripts/package.sh`, and `./scripts/clean.sh`.
+- **CI:** `./scripts/ci.sh` runs the full pipeline (Clean, Debug Workflow, CI Workflow, Integration Tests).
+- **Presets:** All builds use CMake presets.
+  - Configure: `cmake --preset debug`
+  - Build: `cmake --build --preset debug-build`
+  - Test: `ctest --preset debug-test`
+  - Package: `cmake --build --preset release-build --target package`
+  - Workflow: `cmake --workflow --preset debug-workflow`
 - **vcpkg bootstrap (dev containers):** Run `./scripts/bootstrap_vcpkg.sh` once in a fresh container before configuring.
 - **Testing:**
   - **Unit Tests:** Run with `ctest --preset debug-test --output-on-failure` or directly via `./build/debug/bin/cli_tests`.

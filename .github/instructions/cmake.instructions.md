@@ -19,6 +19,8 @@ applyTo: "**/*.cmake,**/CMakeLists.txt"
   - Configure: `cmake --preset <configurePreset>`
   - Build: `cmake --build --preset <buildPreset>`
   - Test: `ctest --preset <testPreset> --output-on-failure`
+  - Package: `cmake --build --preset <buildPreset> --target package` or `cpack --preset <packagePreset>`
+  - Workflow: `cmake --workflow --preset <workflowPreset>`
 - Keep “developer convenience” knobs (sanitizers, extra warnings, local paths) in presets or cache variables, not hardcoded in project files.
 
 ## Target-Based Buildsystem Rules
