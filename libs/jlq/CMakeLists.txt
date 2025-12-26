@@ -6,10 +6,10 @@ find_package(simdjson CONFIG REQUIRED)
 target_sources(
   jlq_lib
   PRIVATE src/cli.cpp
-          src/line_scanner.cpp
+          src/LineScanner.cpp
           src/MappedFile.cpp
           src/path.cpp
-          src/query.cpp)
+          src/Query.cpp)
 
 target_include_directories(jlq_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 

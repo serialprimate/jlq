@@ -1,6 +1,6 @@
 #pragma once
 
-#include "jlq/query_config.hpp"
+#include "QueryConfig.hpp"
 
 #include <cstddef>
 #include <span>

@@ -1,4 +1,4 @@
-#include "jlq/path.hpp"
+#include "path.hpp"
 
 #include <stdexcept>
 

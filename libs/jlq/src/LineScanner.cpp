@@ -1,4 +1,4 @@
-#include "jlq/line_scanner.hpp"
+#include "LineScanner.hpp"
 
 #include <cstddef>
 

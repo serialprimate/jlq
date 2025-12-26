@@ -1,8 +1,8 @@
 #include "test_harness.hpp"
 
-#include "jlq/line_scanner.hpp"
-#include "jlq/path.hpp"
-#include "jlq/query.hpp"
+#include "LineScanner.hpp"
+#include "path.hpp"
+#include "Query.hpp"
 
 #include <cstddef>
 #include <cstring>

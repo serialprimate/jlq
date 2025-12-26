@@ -1,11 +1,11 @@
 #include "jlq/cli.hpp"
 
-#include "exit_codes.hpp"
+#include "ExitCode.hpp"
 #include "MappedFile.hpp"
 
-#include "jlq/path.hpp"
-#include "jlq/query.hpp"
-#include "jlq/query_config.hpp"
+#include "path.hpp"
+#include "Query.hpp"
+#include "QueryConfig.hpp"
 
 #include <iostream>
 #include <charconv>

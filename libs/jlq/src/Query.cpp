@@ -1,6 +1,5 @@
-#include "jlq/query.hpp"
-
-#include "jlq/line_scanner.hpp"
+#include "Query.hpp"
+#include "LineScanner.hpp"
 
 #include <simdjson.h>
 
