@@ -19,8 +19,8 @@ namespace jlq
     // - In default mode: malformed/oversized lines are skipped.
     // - In strict mode: first malformed/oversized line returns QueryStatus::ParseError.
     // Writes matching lines to `out` exactly as they appear in the input.
-    [[nodiscard]] QueryStatus run_query(std::span<const std::byte> mapped,
-                                        const QueryConfig &config,
-                                        std::ostream &out);
+    [[nodiscard]] QueryStatus runQuery(std::span<const std::byte> mapped,
+                                       const QueryConfig &config,
+                                       std::ostream &out);
 
 } // namespace jlq

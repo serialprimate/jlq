@@ -2,7 +2,7 @@
 
 This document consolidates the Phase 2 implementation plan from the project PRD into a single, executable checklist.
 
-Scope (Phase 2) per [PRD.md](../PRD.md):
+Scope (Phase 2) per [PRD.md](PRD.md):
 - Implement the simdjson on-demand parser loop over JSONL lines.
 - Add dot-notation path traversal (object keys only; no arrays).
 - Add type-aware exact matching: `string`, `number`, `bool`, `null`.

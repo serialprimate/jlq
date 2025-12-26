@@ -3,37 +3,18 @@
 #include <cstddef>
 #include <optional>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 namespace jlq
 {
 
-    enum class ValueType
-    {
-        String,
-        Number,
-        Bool,
-        Null,
-    };
-
-    struct QueryValue
-    {
-        ValueType type{ValueType::String};
-
-        // For ValueType::String
-        std::string_view string_value{};
-
-        // For ValueType::Number
-        double number_value{0.0};
-
-        // For ValueType::Bool
-        bool bool_value{false};
-    };
+    using QueryValue = std::variant<std::monostate, std::string_view, double, bool>;
 
     struct QueryConfig
     {
         std::vector<std::string_view> path_segments;
-        QueryValue value{};
+        QueryValue value{std::monostate{}};
         bool strict{false};
         std::size_t threads{1};
     };

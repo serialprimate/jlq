@@ -46,7 +46,7 @@
 
 ## Extending Functionality
 - Add new CLI options and logic in `libs/jlq/src/cli.cpp` and update `run()` in `cli.hpp`.
-- Implement JSON path traversal and filtering in future phases, following the roadmap in `PRD.md`.
+- Implement JSON path traversal and filtering in future phases, following the roadmap in `docs/PRD.md`.
 - All new features should be covered by tests in `test/` using the custom harness.
 - For each change, enable strict warnings, use sanitizers and ensure no warnings/errors.
 
@@ -56,7 +56,7 @@
 
 ## References
 - See `README.md` for build/test instructions and sanitizer usage.
-- See `PRD.md` for project goals, CLI contract, and technical constraints.
+- See `docs/PRD.md` for project goals, CLI contract, and technical constraints.
 - See `CMakePresets.json` for available build/test presets.
 
 ---

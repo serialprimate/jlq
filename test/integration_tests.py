@@ -1,8 +1,11 @@
 import subprocess
 import pytest
+import time
 from pathlib import Path
+from typing import List
 
-def run_jlq(args, binary="./build/debug/bin/jlq"):
+def run_jlq(args: List[str], binary: str = "./build/debug/bin/jlq") -> subprocess.CompletedProcess[str]:
+    """Runs the jlq binary with the given arguments and returns the result."""
     result = subprocess.run(
         [binary] + args,
         capture_output=True,
@@ -10,7 +13,8 @@ def run_jlq(args, binary="./build/debug/bin/jlq"):
     )
     return result
 
-def test_basic_match(tmp_path):
+def test_basic_match(tmp_path: Path) -> None:
+    """Tests basic matching functionality with a generated JSONL file."""
     jsonl_file = tmp_path / "test.jsonl"
     subprocess.run([
         "python3", "scripts/gen_jsonl.py",
@@ -27,7 +31,8 @@ def test_basic_match(tmp_path):
     assert result.returncode == 0
     assert len(result.stdout.splitlines()) == 100
 
-def test_strict_mode_fails_on_malformed(tmp_path):
+def test_strict_mode_fails_on_malformed(tmp_path: Path) -> None:
+    """Tests that --strict mode correctly fails on malformed JSON lines."""
     jsonl_file = tmp_path / "malformed.jsonl"
     subprocess.run([
         "python3", "scripts/gen_jsonl.py",
@@ -45,7 +50,8 @@ def test_strict_mode_fails_on_malformed(tmp_path):
     result_strict = run_jlq([str(jsonl_file), "--path", "a", "--value", "b", "--strict"])
     assert result_strict.returncode == 3
 
-def test_oversized_lines_skipped(tmp_path):
+def test_oversized_lines_skipped(tmp_path: Path) -> None:
+    """Tests that oversized lines are skipped in default mode."""
     jsonl_file = tmp_path / "oversized.jsonl"
     subprocess.run([
         "python3", "scripts/gen_jsonl.py",
@@ -58,9 +64,8 @@ def test_oversized_lines_skipped(tmp_path):
     result = run_jlq([str(jsonl_file), "--path", "a", "--value", "b"])
     assert result.returncode == 0
 
-import time
-
-def test_crlf_handling(tmp_path):
+def test_crlf_handling(tmp_path: Path) -> None:
+    """Tests that CRLF line endings are handled correctly."""
     jsonl_file = tmp_path / "crlf.jsonl"
     subprocess.run([
         "python3", "scripts/gen_jsonl.py",
@@ -77,7 +82,8 @@ def test_crlf_handling(tmp_path):
     assert result.returncode == 0
     assert len(result.stdout.splitlines()) == 50
 
-def test_performance_smoke(tmp_path):
+def test_performance_smoke(tmp_path: Path) -> None:
+    """A smoke test for performance to ensure no major regressions."""
     # Use release binary if it exists, otherwise debug
     binary = "./build/release/bin/jlq"
     if not Path(binary).exists():
@@ -98,6 +104,14 @@ def test_performance_smoke(tmp_path):
     ], check=True)
 
     start = time.perf_counter()
+    result = run_jlq([str(jsonl_file), "--path", "a.b", "--value", "v"], binary=binary)
+    end = time.perf_counter()
+
+    assert result.returncode == 0
+    # Match rate is probabilistic, so we check it's in a reasonable range
+    assert 45_000 <= len(result.stdout.splitlines()) <= 55_000
+    print(f"Processed {lines} lines in {end - start:.4f}s")
+
     result = run_jlq([str(jsonl_file), "--path", "a.b", "--value", "v"], binary=binary)
     end = time.perf_counter()
 

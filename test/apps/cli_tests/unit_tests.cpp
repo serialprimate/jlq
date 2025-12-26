@@ -19,20 +19,15 @@ namespace
     {
         return {reinterpret_cast<const std::byte *>(s.data()), s.size()};
     }
-
-    [[nodiscard]] std::string_view asStringView(const std::vector<std::string_view> &segments, std::size_t i)
-    {
-        return segments.at(i);
-    }
 } // namespace
 
-JLQ_TEST_CASE("parse_dot_path rejects invalid forms")
+JLQ_TEST_CASE("parseDotPath rejects invalid forms")
 {
     JLQ_CHECK([]
               {
         try
         {
-            (void)jlq::parse_dot_path("");
+            (void)jlq::parseDotPath("");
             return false;
         }
         catch (const std::invalid_argument &)
@@ -44,7 +39,7 @@ JLQ_TEST_CASE("parse_dot_path rejects invalid forms")
               {
         try
         {
-            (void)jlq::parse_dot_path(".a");
+            (void)jlq::parseDotPath(".a");
             return false;
         }
         catch (const std::invalid_argument &)
@@ -56,7 +51,7 @@ JLQ_TEST_CASE("parse_dot_path rejects invalid forms")
               {
         try
         {
-            (void)jlq::parse_dot_path("a.");
+            (void)jlq::parseDotPath("a.");
             return false;
         }
         catch (const std::invalid_argument &)
@@ -68,7 +63,7 @@ JLQ_TEST_CASE("parse_dot_path rejects invalid forms")
               {
         try
         {
-            (void)jlq::parse_dot_path("a..b");
+            (void)jlq::parseDotPath("a..b");
             return false;
         }
         catch (const std::invalid_argument &)
@@ -77,13 +72,13 @@ JLQ_TEST_CASE("parse_dot_path rejects invalid forms")
         } }());
 }
 
-JLQ_TEST_CASE("parse_dot_path splits segments")
+JLQ_TEST_CASE("parseDotPath splits segments")
 {
-    const auto segs = jlq::parse_dot_path("a.b.c");
+    const auto segs = jlq::parseDotPath("a.b.c");
     JLQ_CHECK_EQ(segs.size(), static_cast<std::size_t>(3));
-    JLQ_CHECK_EQ(asStringView(segs, 0), std::string_view("a"));
-    JLQ_CHECK_EQ(asStringView(segs, 1), std::string_view("b"));
-    JLQ_CHECK_EQ(asStringView(segs, 2), std::string_view("c"));
+    JLQ_CHECK_EQ(segs.at(0), std::string_view("a"));
+    JLQ_CHECK_EQ(segs.at(1), std::string_view("b"));
+    JLQ_CHECK_EQ(segs.at(2), std::string_view("c"));
 }
 
 JLQ_TEST_CASE("LineScanner splits on newline and preserves last line without newline")
@@ -129,67 +124,64 @@ JLQ_TEST_CASE("LineScanner trims a single trailing CR for parsing")
     JLQ_CHECK(line.had_newline);
 }
 
-JLQ_TEST_CASE("run_query matches strings and preserves CRLF bytes")
+JLQ_TEST_CASE("runQuery matches strings and preserves CRLF bytes")
 {
     const std::string input = "{\"a\":{\"b\":\"x\"}}\r\n{\"a\":{\"b\":\"y\"}}\n";
 
     jlq::QueryConfig cfg;
-    cfg.path_segments = jlq::parse_dot_path("a.b");
-    cfg.value.type = jlq::ValueType::String;
-    cfg.value.string_value = "x";
+    cfg.path_segments = jlq::parseDotPath("a.b");
+    cfg.value = std::string_view("x");
 
     std::ostringstream out;
-    const auto status = jlq::run_query(asBytes(input), cfg, out);
+    const auto status = jlq::runQuery(asBytes(input), cfg, out);
     JLQ_CHECK_EQ(status, jlq::QueryStatus::Ok);
     JLQ_CHECK_EQ(out.str(), std::string("{\"a\":{\"b\":\"x\"}}\r\n"));
 }
 
-JLQ_TEST_CASE("run_query matches null without requiring a value")
+JLQ_TEST_CASE("runQuery matches null without requiring a value")
 {
     const std::string input = "{\"a\":{\"b\":null}}\n{\"a\":{\"b\":\"x\"}}\n";
 
     jlq::QueryConfig cfg;
-    cfg.path_segments = jlq::parse_dot_path("a.b");
-    cfg.value.type = jlq::ValueType::Null;
+    cfg.path_segments = jlq::parseDotPath("a.b");
+    cfg.value = std::monostate{};
 
     std::ostringstream out;
-    const auto status = jlq::run_query(asBytes(input), cfg, out);
+    const auto status = jlq::runQuery(asBytes(input), cfg, out);
     JLQ_CHECK_EQ(status, jlq::QueryStatus::Ok);
     JLQ_CHECK_EQ(out.str(), std::string("{\"a\":{\"b\":null}}\n"));
 }
 
-JLQ_TEST_CASE("run_query matches numbers by numeric equality")
+JLQ_TEST_CASE("runQuery matches numbers by numeric equality")
 {
     const std::string input = "{\"a\":{\"n\":1}}\n{\"a\":{\"n\":2}}\n";
 
     jlq::QueryConfig cfg;
-    cfg.path_segments = jlq::parse_dot_path("a.n");
-    cfg.value.type = jlq::ValueType::Number;
-    cfg.value.number_value = 2.0;
+    cfg.path_segments = jlq::parseDotPath("a.n");
+    cfg.value = 2.0;
 
     std::ostringstream out;
-    const auto status = jlq::run_query(asBytes(input), cfg, out);
+    const auto status = jlq::runQuery(asBytes(input), cfg, out);
     JLQ_CHECK_EQ(status, jlq::QueryStatus::Ok);
     JLQ_CHECK_EQ(out.str(), std::string("{\"a\":{\"n\":2}}\n"));
 }
 
-JLQ_TEST_CASE("run_query strict mode fails fast on malformed JSON")
+JLQ_TEST_CASE("runQuery strict mode fails fast on malformed JSON")
 {
     const std::string input = "{\"a\":\n{\"a\":{\"b\":\"x\"}}\n";
 
     jlq::QueryConfig cfg;
     cfg.strict = true;
-    cfg.path_segments = jlq::parse_dot_path("a.b");
-    cfg.value.type = jlq::ValueType::String;
-    cfg.value.string_value = "x";
+    cfg.path_segments = jlq::parseDotPath("a.b");
+    cfg.value = std::string_view("x");
 
     std::ostringstream out;
-    const auto status = jlq::run_query(asBytes(input), cfg, out);
+    const auto status = jlq::runQuery(asBytes(input), cfg, out);
     JLQ_CHECK_EQ(status, jlq::QueryStatus::ParseError);
     JLQ_CHECK_EQ(out.str(), std::string(""));
 }
 
-JLQ_TEST_CASE("run_query oversize line is skipped by default and errors in strict")
+JLQ_TEST_CASE("runQuery oversize line is skipped by default and errors in strict")
 {
     std::string big;
     big.resize(jlq::LineScanner::max_line_length + 1, 'a');
@@ -197,13 +189,12 @@ JLQ_TEST_CASE("run_query oversize line is skipped by default and errors in stric
     const std::string input = big + "\n" + "{\"a\":{\"b\":\"x\"}}\n";
 
     jlq::QueryConfig cfg;
-    cfg.path_segments = jlq::parse_dot_path("a.b");
-    cfg.value.type = jlq::ValueType::String;
-    cfg.value.string_value = "x";
+    cfg.path_segments = jlq::parseDotPath("a.b");
+    cfg.value = std::string_view("x");
 
     {
         std::ostringstream out;
-        const auto status = jlq::run_query(asBytes(input), cfg, out);
+        const auto status = jlq::runQuery(asBytes(input), cfg, out);
         JLQ_CHECK_EQ(status, jlq::QueryStatus::Ok);
         JLQ_CHECK_EQ(out.str(), std::string("{\"a\":{\"b\":\"x\"}}\n"));
     }
@@ -211,7 +202,7 @@ JLQ_TEST_CASE("run_query oversize line is skipped by default and errors in stric
     cfg.strict = true;
     {
         std::ostringstream out;
-        const auto status = jlq::run_query(asBytes(input), cfg, out);
+        const auto status = jlq::runQuery(asBytes(input), cfg, out);
         JLQ_CHECK_EQ(status, jlq::QueryStatus::ParseError);
     }
 }

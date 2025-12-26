@@ -5,7 +5,7 @@
 namespace jlq
 {
 
-    std::vector<std::string_view> parse_dot_path(std::string_view path)
+    std::vector<std::string_view> parseDotPath(std::string_view path)
     {
         if (path.empty())
         {

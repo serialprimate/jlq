@@ -37,57 +37,60 @@ namespace jlq
             return MatchResult::Malformed;
         }
 
-        void write_bytes(std::ostream &out, std::span<const std::byte> bytes)
+        void writeBytes(std::ostream &out, std::span<const std::byte> bytes)
         {
             const auto *ptr = reinterpret_cast<const char *>(bytes.data());
             out.write(ptr, static_cast<std::streamsize>(bytes.size()));
         }
 
-        MatchResult value_matches(simdjson::ondemand::value value, const QueryValue &qv)
+        MatchResult valueMatches(simdjson::ondemand::value value, const QueryValue &qv)
         {
-            switch (qv.type)
-            {
-            case ValueType::String:
-            {
-                auto s = value.get_string();
-                if (s.error())
+            return std::visit(
+                [&](auto &&arg) -> MatchResult
                 {
-                    return classifyError(s.error());
-                }
-                return (s.value() == qv.string_value) ? MatchResult::Match : MatchResult::NoMatch;
-            }
-            case ValueType::Number:
-            {
-                auto d = value.get_double();
-                if (d.error())
-                {
-                    return classifyError(d.error());
-                }
-                return (d.value() == qv.number_value) ? MatchResult::Match : MatchResult::NoMatch;
-            }
-            case ValueType::Bool:
-            {
-                auto b = value.get_bool();
-                if (b.error())
-                {
-                    return classifyError(b.error());
-                }
-                return (b.value() == qv.bool_value) ? MatchResult::Match : MatchResult::NoMatch;
-            }
-            case ValueType::Null:
-            {
-                auto is_null = value.is_null();
-                if (is_null.error())
-                {
-                    return classifyError(is_null.error());
-                }
-                return is_null.value() ? MatchResult::Match : MatchResult::NoMatch;
-            }
-            }
-            return MatchResult::NoMatch;
+                    using T = std::decay_t<decltype(arg)>;
+                    if constexpr (std::is_same_v<T, std::string_view>)
+                    {
+                        auto s = value.get_string();
+                        if (s.error())
+                        {
+                            return classifyError(s.error());
+                        }
+                        return (s.value() == arg) ? MatchResult::Match : MatchResult::NoMatch;
+                    }
+                    else if constexpr (std::is_same_v<T, double>)
+                    {
+                        auto d = value.get_double();
+                        if (d.error())
+                        {
+                            return classifyError(d.error());
+                        }
+                        return (d.value() == arg) ? MatchResult::Match : MatchResult::NoMatch;
+                    }
+                    else if constexpr (std::is_same_v<T, bool>)
+                    {
+                        auto b = value.get_bool();
+                        if (b.error())
+                        {
+                            return classifyError(b.error());
+                        }
+                        return (b.value() == arg) ? MatchResult::Match : MatchResult::NoMatch;
+                    }
+                    else if constexpr (std::is_same_v<T, std::monostate>)
+                    {
+                        auto is_null = value.is_null();
+                        if (is_null.error())
+                        {
+                            return classifyError(is_null.error());
+                        }
+                        return is_null.value() ? MatchResult::Match : MatchResult::NoMatch;
+                    }
+                    return MatchResult::NoMatch;
+                },
+                qv);
         }
 
-        MatchResult traverse_and_match(simdjson::ondemand::document &doc, const QueryConfig &config)
+        MatchResult traverseAndMatch(simdjson::ondemand::document &doc, const QueryConfig &config)
         {
             auto obj_res = doc.get_object();
             if (obj_res.error())
@@ -109,7 +112,7 @@ namespace jlq
                 const bool last = (i + 1 == config.path_segments.size());
                 if (last)
                 {
-                    return value_matches(v, config.value);
+                    return valueMatches(v, config.value);
                 }
 
                 auto next_obj_res = v.get_object();
@@ -125,10 +128,11 @@ namespace jlq
 
     } // namespace
 
-    QueryStatus run_query(std::span<const std::byte> mapped, const QueryConfig &config, std::ostream &out)
+    QueryStatus runQuery(std::span<const std::byte> mapped, const QueryConfig &config, std::ostream &out)
     {
         simdjson::ondemand::parser parser;
         std::vector<char> scratch;
+        scratch.reserve(LineScanner::max_line_length + simdjson::SIMDJSON_PADDING);
 
         LineScanner scanner(mapped);
         ScannedLine line;
@@ -161,7 +165,7 @@ namespace jlq
                 continue;
             }
 
-            const MatchResult result = traverse_and_match(doc, config);
+            const MatchResult result = traverseAndMatch(doc, config);
             if (result == MatchResult::Malformed)
             {
                 if (config.strict)
@@ -173,7 +177,7 @@ namespace jlq
 
             if (result == MatchResult::Match)
             {
-                write_bytes(out, line.raw);
+                writeBytes(out, line.raw);
                 if (line.had_newline)
                 {
                     out.put('\n');

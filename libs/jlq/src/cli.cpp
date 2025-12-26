@@ -20,6 +20,14 @@ namespace jlq
     namespace
     {
 
+        enum class ValueType
+        {
+            String,
+            Number,
+            Bool,
+            Null,
+        };
+
         void printUsage(std::ostream &os)
         {
             os << "Usage: jlq <file> --path <path> --value <value> [--type <type>] [--threads <n>] [--strict]\n";
@@ -298,7 +306,7 @@ namespace jlq
 
         try
         {
-            config.path_segments = parse_dot_path(*path);
+            config.path_segments = parseDotPath(*path);
         }
         catch (const std::exception &)
         {
@@ -317,7 +325,7 @@ namespace jlq
             config.threads = *parsed;
         }
 
-        config.value.type = ValueType::String;
+        ValueType vt_choice = ValueType::String;
         if (type.has_value())
         {
             const auto vt = parseValueType(*type);
@@ -326,10 +334,10 @@ namespace jlq
                 printUsage(err);
                 return static_cast<int>(ExitCode::UsageError);
             }
-            config.value.type = *vt;
+            vt_choice = *vt;
         }
 
-        if (config.value.type != ValueType::Null)
+        if (vt_choice != ValueType::Null)
         {
             if (!value.has_value())
             {
@@ -338,10 +346,10 @@ namespace jlq
             }
         }
 
-        switch (config.value.type)
+        switch (vt_choice)
         {
         case ValueType::String:
-            config.value.string_value = value.value_or(std::string_view{});
+            config.value = value.value_or(std::string_view{});
             break;
         case ValueType::Bool:
         {
@@ -350,11 +358,11 @@ namespace jlq
                 printUsage(err);
                 return static_cast<int>(ExitCode::UsageError);
             }
-            config.value.bool_value = (*value == "true");
+            config.value = (*value == "true");
             break;
         }
         case ValueType::Null:
-            // --value ignored
+            config.value = std::monostate{};
             break;
         case ValueType::Number:
         {
@@ -369,7 +377,7 @@ namespace jlq
                 printUsage(err);
                 return static_cast<int>(ExitCode::UsageError);
             }
-            config.value.number_value = *parsed;
+            config.value = *parsed;
             break;
         }
         }
@@ -377,7 +385,7 @@ namespace jlq
         try
         {
             MappedFile mf = MappedFile::openReadonly(std::string(file));
-            const QueryStatus status = run_query(mf.bytes(), config, out);
+            const QueryStatus status = runQuery(mf.bytes(), config, out);
             if (status == QueryStatus::ParseError)
             {
                 return static_cast<int>(ExitCode::ParseError);
