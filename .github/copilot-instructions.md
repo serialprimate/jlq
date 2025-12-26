@@ -9,20 +9,25 @@
 - `libs/jlq/`: Core library code
   - `src/cli.cpp`, `include/jlq/cli.hpp`: CLI entry point, argument parsing, usage contract
   - `src/MappedFile.cpp`, `src/MappedFile.hpp`: Memory-mapped file abstraction
-  - `src/exit_codes.hpp`: Standardized exit codes for CLI
-  - `include/jlq/path.hpp`, `src/path.cpp`: Dot-path parsing into segments
-  - `include/jlq/line_scanner.hpp`, `src/line_scanner.cpp`: JSONL line splitting (CRLF tolerant, empty-line skipping, max-line enforcement)
-  - `include/jlq/query.hpp`, `src/query.cpp`: Query engine (scratch-buffer + `simdjson::SIMDJSON_PADDING`, on-demand parsing)
-  - `include/jlq/query_config.hpp`: `QueryConfig` / `ValueType` / parsed value representation
+  - `src/ExitCode.hpp`: Standardized exit codes for CLI
+  - `src/path.cpp`, `src/path.hpp`: Dot-path parsing into segments
+  - `src/LineScanner.cpp`, `src/LineScanner.hpp`: JSONL line splitting (CRLF tolerant, empty-line skipping, max-line enforcement)
+  - `src/Query.cpp`, `src/Query.hpp`: Query engine (scratch-buffer + `simdjson::SIMDJSON_PADDING`, on-demand parsing)
+  - `src/QueryConfig.hpp`: `QueryConfig` / `ValueType` / parsed value representation
 - `apps/jlq/`: CLI executable (`main.cpp`)
 - `test/`: Test suite
   - `apps/`: Test executables (e.g., `cli_tests`, `mapped_file_tests`)
   - `libs/test_utils/`: Shared test utilities (`test_harness.hpp`, `TempFile.hpp`)
+  - `integration_tests.py`: Python-based integration tests using `pytest`
 
 ## Build & Test Workflow
+- **Scripts:** Preferred workflow uses `./scripts/build.sh`, `./scripts/test.sh`, and `./scripts/clean.sh`.
+- **CI:** `./scripts/ci.sh` runs the full pipeline (Clean, Build/Test Debug, Build/Test Release).
 - **Presets:** All builds use CMake presets. Configure with `cmake --preset debug`, build with `cmake --build --preset debug-build`.
 - **vcpkg bootstrap (dev containers):** Run `./scripts/bootstrap_vcpkg.sh` once in a fresh container before configuring.
-- **Testing:** Run tests with `ctest --preset debug-test --output-on-failure` or directly via `./build/debug/bin/cli_tests` and `./build/debug/bin/mapped_file_tests`.
+- **Testing:**
+  - **Unit Tests:** Run with `ctest --preset debug-test --output-on-failure` or directly via `./build/debug/bin/cli_tests`.
+  - **Integration Tests:** Run with `pytest test/integration_tests.py` (requires `.venv`).
 - **Sanitizers:** Enable with `-DENABLE_ASAN=ON` (AddressSanitizer), `-DENABLE_UBSAN=ON`, or `-DENABLE_TSAN=ON` for debug builds only. Do not use Valgrind and ASAN together.
 - **Strict Warnings:** Warnings are treated as errors by default. Disable with `-DJLQ_ENABLE_WERROR=OFF`.
 - **No in-source builds:** Building in the source directory is forbidden by CMakeLists.txt.
@@ -32,7 +37,9 @@
 - **Parsing safety:** Never parse directly from the `mmap` span; always copy each line to a scratch buffer sized `line_length + simdjson::SIMDJSON_PADDING` and zero-pad.
 - **Strict mode:** Default skips malformed/oversized lines; `--strict` fails fast with exit code 3.
 - **Error handling:** Uses RAII and exceptions for resource management and error propagation. Exit codes are standardized.
-- **Testing:** Uses a custom test harness (`test_harness.hpp`) with `JLQ_TEST_CASE` and `JLQ_CHECK_EQ` macros. Test output is printed to stdout.
+- **Testing:**
+  - Uses a custom test harness (`test_harness.hpp`) with `JLQ_TEST_CASE` and `JLQ_CHECK_EQ` macros.
+  - Integration tests use `scripts/gen_jsonl.py` to generate deterministic test data.
 - **Temporary files:** Tests use `TempFile` utility for safe, auto-cleaned temp files.
 - **Test Utilities:** Shared test code is located in `test/libs/test_utils` and exposed via the `jlq::test_utils` target.
 - **Dev Container**: You are working within a dev container. Everything you do must be dev container friendly.

@@ -8,6 +8,15 @@ C++23 command-line tool for querying JSONL files.
 - CMake >= 3.28
 - A C++23 compiler (the presets default to `g++`)
 
+## Quick Start (Scripts)
+
+For convenience, several scripts are provided to automate the workflow:
+
+- **Clean**: `./scripts/clean.sh` (removes `build/`, `.venv/`, and test artifacts)
+- **Build**: `./scripts/build.sh [preset]` (defaults to `debug`)
+- **Test**: `./scripts/test.sh [preset]` (runs C++ unit tests and Python integration tests)
+- **CI**: `./scripts/ci.sh` (runs clean, build, and test for both debug and release)
+
 ## Configure
 
 This repo uses CMake presets.
@@ -65,6 +74,7 @@ Strict mode (first malformed/oversized line => exit code 3):
 
 ## Test
 
+### C++ Unit Tests
 Run all tests with CTest:
 
 ```bash
@@ -79,6 +89,14 @@ Or run individual test executables directly:
 
 # Mapped file tests
 ./build/debug/bin/mapped_file_tests
+```
+
+### Python Integration Tests
+These tests use `pytest` and `gen_jsonl.py` to verify `jlq` against various edge cases (malformed JSON, oversized lines, CRLF, etc.).
+
+```bash
+source .venv/bin/activate
+pytest test/integration_tests.py
 ```
 
 ## Clean
@@ -133,6 +151,13 @@ Run the benchmark runner:
 ```bash
 ./scripts/bench.py --jlq ./build/release/bin/jlq --file /mnt/nvme/jlq_10g.jsonl \
 	--path network.http.status --type number --value 500 --runs 7 --warmups 1
+```
+
+### Comparison with other tools
+To compare `jlq` performance against `jq` and `grep`:
+
+```bash
+./scripts/compare_bench.sh
 ```
 
 See [docs/benchmarking.md](docs/benchmarking.md) for methodology and reporting guidance.

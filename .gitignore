@@ -1,5 +1,6 @@
 /example
 /build
 __pycache__/
-
+.venv/
+.pytest_cache/
 /vcpkg
