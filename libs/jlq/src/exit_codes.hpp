@@ -8,6 +8,7 @@ namespace jlq
         Success = 0,
         UsageError = 1,
         OsError = 2,
+        ParseError = 3,
     };
 
 } // namespace jlq

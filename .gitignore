@@ -1,3 +1,5 @@
 /example
 /build
 __pycache__/
+
+/vcpkg

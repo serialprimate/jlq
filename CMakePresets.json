@@ -6,11 +6,15 @@
             "hidden": true,
             "generator": "Unix Makefiles",
             "binaryDir": "${sourceDir}/build/${presetName}",
+            "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "cacheVariables": {
                 "CMAKE_CXX_COMPILER": "g++",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": true,
                 "CMAKE_CXX_STANDARD": "23",
                 "CMAKE_CXX_EXTENSIONS": false,
+                "VCPKG_MANIFEST_DIR": "${sourceDir}",
+                "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/vcpkg-triplets",
+                "VCPKG_TARGET_TRIPLET": "arm64-linux-gnu",
                 "ENABLE_ASAN": false,
                 "ENABLE_UBSAN": false,
                 "ENABLE_TSAN": false
@@ -37,6 +41,22 @@
             "inherits": "base-configure",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "debug-asan",
+            "displayName": "Debug (ASAN)",
+            "inherits": "debug",
+            "cacheVariables": {
+                "ENABLE_ASAN": true
+            }
+        },
+        {
+            "name": "debug-ubsan",
+            "displayName": "Debug (UBSAN)",
+            "inherits": "debug",
+            "cacheVariables": {
+                "ENABLE_UBSAN": true
             }
         },
         {
@@ -67,6 +87,20 @@
             "displayName": "Debug Build",
             "inherits": "base-build",
             "configurePreset": "debug",
+            "verbose": true
+        },
+        {
+            "name": "debug-asan-build",
+            "displayName": "Debug (ASAN) Build",
+            "inherits": "base-build",
+            "configurePreset": "debug-asan",
+            "verbose": true
+        },
+        {
+            "name": "debug-ubsan-build",
+            "displayName": "Debug (UBSAN) Build",
+            "inherits": "base-build",
+            "configurePreset": "debug-ubsan",
             "verbose": true
         },
         {
@@ -102,6 +136,18 @@
             "displayName": "Debug Test",
             "inherits": "base-test",
             "configurePreset": "debug"
+        },
+        {
+            "name": "debug-asan-test",
+            "displayName": "Debug (ASAN) Test",
+            "inherits": "base-test",
+            "configurePreset": "debug-asan"
+        },
+        {
+            "name": "debug-ubsan-test",
+            "displayName": "Debug (UBSAN) Test",
+            "inherits": "base-test",
+            "configurePreset": "debug-ubsan"
         },
         {
             "name": "release-test",

@@ -3,13 +3,17 @@
 ## Project Overview
 - **jlq** is a high-performance C++23 command-line tool for querying large JSONL files using memory mapping and SIMD-accelerated parsing.
 - The codebase is modular, with clear separation between CLI logic, file mapping, and (future) JSON querying.
-- The MVP supports only basic file mapping and CLI argument validation; future phases will add JSON path traversal and filtering.
+- Phase 2 implements a single-threaded query engine using `simdjson` on-demand parsing, dot-notation path traversal (object keys only), and type-aware exact matching.
 
 ## Key Components
 - `libs/jlq/`: Core library code
   - `src/cli.cpp`, `include/jlq/cli.hpp`: CLI entry point, argument parsing, usage contract
-  - `src/mapped_file.cpp`, `include/jlq/mapped_file.hpp`: Memory-mapped file abstraction
-  - `include/jlq/exit_codes.hpp`: Standardized exit codes for CLI
+  - `src/MappedFile.cpp`, `src/MappedFile.hpp`: Memory-mapped file abstraction
+  - `src/exit_codes.hpp`: Standardized exit codes for CLI
+  - `include/jlq/path.hpp`, `src/path.cpp`: Dot-path parsing into segments
+  - `include/jlq/line_scanner.hpp`, `src/line_scanner.cpp`: JSONL line splitting (CRLF tolerant, empty-line skipping, max-line enforcement)
+  - `include/jlq/query.hpp`, `src/query.cpp`: Query engine (scratch-buffer + `simdjson::SIMDJSON_PADDING`, on-demand parsing)
+  - `include/jlq/query_config.hpp`: `QueryConfig` / `ValueType` / parsed value representation
 - `apps/jlq/`: CLI executable (`main.cpp`)
 - `test/`: Test suite
   - `apps/`: Test executables (e.g., `cli_tests`, `mapped_file_tests`)
@@ -17,17 +21,21 @@
 
 ## Build & Test Workflow
 - **Presets:** All builds use CMake presets. Configure with `cmake --preset debug`, build with `cmake --build --preset debug-build`.
+- **vcpkg bootstrap (dev containers):** Run `./scripts/bootstrap_vcpkg.sh` once in a fresh container before configuring.
 - **Testing:** Run tests with `ctest --preset debug-test --output-on-failure` or directly via `./build/debug/bin/cli_tests` and `./build/debug/bin/mapped_file_tests`.
 - **Sanitizers:** Enable with `-DENABLE_ASAN=ON` (AddressSanitizer), `-DENABLE_UBSAN=ON`, or `-DENABLE_TSAN=ON` for debug builds only. Do not use Valgrind and ASAN together.
 - **Strict Warnings:** Warnings are treated as errors by default. Disable with `-DJLQ_ENABLE_WERROR=OFF`.
 - **No in-source builds:** Building in the source directory is forbidden by CMakeLists.txt.
 
 ## Project-Specific Patterns
-- **CLI contract:** Only a single positional file argument and `--help` are accepted in MVP. All other arguments are rejected.
+- **CLI contract (Phase 2):** `jlq <file> --path <path> --value <value> [--type <type>] [--threads <n>] [--strict]` and `--help`.
+- **Parsing safety:** Never parse directly from the `mmap` span; always copy each line to a scratch buffer sized `line_length + simdjson::SIMDJSON_PADDING` and zero-pad.
+- **Strict mode:** Default skips malformed/oversized lines; `--strict` fails fast with exit code 3.
 - **Error handling:** Uses RAII and exceptions for resource management and error propagation. Exit codes are standardized.
 - **Testing:** Uses a custom test harness (`test_harness.hpp`) with `JLQ_TEST_CASE` and `JLQ_CHECK_EQ` macros. Test output is printed to stdout.
 - **Temporary files:** Tests use `TempFile` utility for safe, auto-cleaned temp files.
 - **Test Utilities:** Shared test code is located in `test/libs/test_utils` and exposed via the `jlq::test_utils` target.
+- **Dev Container**: You are working within a dev container. Everything you do must be dev container friendly.
 
 ## Extending Functionality
 - Add new CLI options and logic in `libs/jlq/src/cli.cpp` and update `run()` in `cli.hpp`.
@@ -36,7 +44,7 @@
 - For each change, enable strict warnings, use sanitizers and ensure no warnings/errors.
 
 ## Integration & Dependencies
-- Uses `simdjson` (planned) for fast JSON parsing and `mmap` for file access.
+- Uses `simdjson` for fast JSON parsing and `mmap` for file access.
 - Dependency management is via CMake and (optionally) vcpkg.
 
 ## References

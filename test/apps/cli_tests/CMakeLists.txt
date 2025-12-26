@@ -1,5 +1,6 @@
 add_executable(cli_tests
   cli_tests.cpp
+  unit_tests.cpp
   main.cpp)
 
 target_link_libraries(cli_tests

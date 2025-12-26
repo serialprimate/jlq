@@ -12,6 +12,12 @@ C++23 command-line tool for querying JSONL files.
 
 This repo uses CMake presets.
 
+This project uses **vcpkg in manifest mode**. In a fresh dev container, bootstrap vcpkg first:
+
+```bash
+./scripts/bootstrap_vcpkg.sh
+```
+
 List available presets:
 
 ```bash
@@ -43,6 +49,18 @@ Run the CLI:
 
 ```bash
 ./build/debug/bin/jlq --help
+```
+
+Query example:
+
+```bash
+./build/debug/bin/jlq data.jsonl --path network.http.status --type number --value 500
+```
+
+Strict mode (first malformed/oversized line => exit code 3):
+
+```bash
+./build/debug/bin/jlq data.jsonl --strict --path network.http.status --type number --value 500
 ```
 
 ## Test
