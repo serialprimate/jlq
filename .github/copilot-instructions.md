@@ -13,11 +13,11 @@
   - `src/path.cpp`, `src/path.hpp`: Dot-path parsing into segments
   - `src/LineScanner.cpp`, `src/LineScanner.hpp`: JSONL line splitting (CRLF tolerant, empty-line skipping, max-line enforcement)
   - `src/Query.cpp`, `src/Query.hpp`: Query engine (scratch-buffer + `simdjson::SIMDJSON_PADDING`, on-demand parsing)
-  - `src/QueryConfig.hpp`: `QueryConfig` / `ValueType` / parsed value representation
+  - `src/QueryConfig.hpp`: `QueryConfig` / `QueryValue` / parsed value representation
 - `apps/jlq/`: CLI executable (`main.cpp`)
 - `test/`: Test suite
   - `apps/`: Test executables (e.g., `cli_tests`, `mapped_file_tests`)
-  - `libs/test_utils/`: Shared test utilities (`test_harness.hpp`, `TempFile.hpp`)
+  - `libs/test_utils/`: Shared test utilities (`test_harness.hpp`, `TempFile.hpp` in `include/`)
   - `integration_tests.py`: Python-based integration tests using `pytest`
 
 ## Build & Test Workflow

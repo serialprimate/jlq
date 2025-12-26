@@ -79,8 +79,11 @@ Or use the script:
 
 Artifacts are placed under:
 
-- `build/debug/bin/` (executables)
-- `build/debug/lib/` (libraries)
+- `build/<preset>/bin/` (executables)
+- `build/<preset>/lib/` (libraries)
+
+For example, for the `debug` preset:
+- `build/debug/bin/`
 
 Run the CLI:
 
