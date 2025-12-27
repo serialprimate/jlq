@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    # Using ARM64 runner to match project's target architecture and presets.
+    # Note: ubuntu-24.04-arm is currently in public beta for GitHub Actions.
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Pre-cache vcpkg binary cache
+      # We cache the vcpkg folder so it's available to the dev container
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/vcpkg
+        key: ${{ runner.os }}-vcpkg-bin-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-commit.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-vcpkg-bin-
+
+    - name: Run CI in Dev Container
+      uses: devcontainers/ci-action@v0.3
+      with:
+        imageName: jlq-dev-container
+        cacheFrom: jlq-dev-container
+        # This runs the ci.sh script INSIDE the dev container environment
+        runCmd: |
+          # Ensure vcpkg cache is linked if needed, though ci.sh handles bootstrapping
+          ./scripts/ci.sh
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: jlq-package
+        path: build/release/*.tar.gz
