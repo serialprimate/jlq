@@ -11,10 +11,24 @@ jobs:
     # Using ARM64 runner to match project's target architecture and presets.
     # Note: ubuntu-24.04-arm is currently in public beta for GitHub Actions.
     runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      packages: write
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Set lower case repo name
+      run: |
+        echo "REPO_LOWER=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Pre-cache vcpkg binary cache
       # We cache the vcpkg folder so it's available to the dev container
@@ -28,8 +42,9 @@ jobs:
     - name: Run CI in Dev Container
       uses: devcontainers/ci@v0.3
       with:
-        imageName: ghcr.io/serialprimate/jlq-dev-container
-        cacheFrom: ghcr.io/serialprimate/jlq-dev-container
+        imageName: ghcr.io/${{ env.REPO_LOWER }}-dev-container
+        cacheFrom: ghcr.io/${{ env.REPO_LOWER }}-dev-container
+        push: always
         # This runs the ci.sh script INSIDE the dev container environment
         runCmd: |
           # Ensure vcpkg cache is linked if needed, though ci.sh handles bootstrapping
