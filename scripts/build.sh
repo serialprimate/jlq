@@ -12,15 +12,10 @@ if [[ ! -f "$ROOT_DIR/vcpkg/vcpkg" ]]; then
     "$ROOT_DIR/scripts/bootstrap_vcpkg.sh"
 fi
 
-# 2. Setup Python virtual environment if not already done
-if [[ ! -d "$ROOT_DIR/.venv" ]]; then
-    printf "Setting up Python virtual environment...\n"
-    python3 -m venv "$ROOT_DIR/.venv"
-    source "$ROOT_DIR/.venv/bin/activate"
-    pip install pytest
-else
-    source "$ROOT_DIR/.venv/bin/activate"
-fi
+# 2. Setup Python virtual environment
+# shellcheck disable=SC1091
+source "$ROOT_DIR/scripts/python_venv.sh"
+jlq_ensure_venv "$ROOT_DIR"
 
 # 3. Configure CMake
 printf "Configuring CMake...\n"
