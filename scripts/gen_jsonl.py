@@ -11,8 +11,8 @@ Generates a stream of JSONL records with controlled rates of:
 - optional final line without a newline
 - optional oversized lines (> 64MiB) for policy testing
 
-This script is intended for local benchmarking and manual testing. It is not
-part of the unit test suite.
+This script is used by Python integration tests and CI, and is also useful for
+local benchmarking and manual testing.
 """
 
 from __future__ import annotations
@@ -25,25 +25,67 @@ from pathlib import Path
 from typing import Any, TextIO
 
 
+PathSegment = str | int
+
+
 MAX_LINE_BYTES_DEFAULT = 64 * 1024 * 1024
 
 
-def parse_dot_path(path: str) -> list[str]:
-    segments = path.split(".")
-    if not segments or any(seg == "" for seg in segments):
+def parse_dot_path(path: str) -> list[PathSegment]:
+    segments: list[PathSegment] = []
+    for raw in path.split("."):
+        if raw == "":
+            raise ValueError(f"Invalid dot path: {path!r}")
+
+        if raw.isdigit():
+            # Mirror jlq's CLI semantics: all-digit segments are array indices.
+            # This intentionally accepts leading zeros (e.g. "001" -> 1).
+            segments.append(int(raw))
+        else:
+            segments.append(raw)
+
+    if not segments:
         raise ValueError(f"Invalid dot path: {path!r}")
     return segments
 
 
-def set_path(obj: dict[str, Any], segments: list[str], value: Any) -> None:
-    cur: dict[str, Any] = obj
-    for seg in segments[:-1]:
+def set_path(obj: dict[str, Any], segments: list[PathSegment], value: Any) -> None:
+    cur: Any = obj
+
+    for i, seg in enumerate(segments[:-1]):
+        next_seg = segments[i + 1]
+        want_list = isinstance(next_seg, int)
+
+        if isinstance(seg, int):
+            if not isinstance(cur, list):
+                raise TypeError("Invalid path: array index used at non-array location")
+            while len(cur) <= seg:
+                cur.append({} if not want_list else [])
+            if not isinstance(cur[seg], list if want_list else dict):
+                cur[seg] = [] if want_list else {}
+            cur = cur[seg]
+            continue
+
+        if not isinstance(cur, dict):
+            raise TypeError("Invalid path: object key used at non-object location")
+
         nxt = cur.get(seg)
-        if not isinstance(nxt, dict):
-            nxt = {}
+        if not isinstance(nxt, list if want_list else dict):
+            nxt = [] if want_list else {}
             cur[seg] = nxt
         cur = nxt
-    cur[segments[-1]] = value
+
+    last = segments[-1]
+    if isinstance(last, int):
+        if not isinstance(cur, list):
+            raise TypeError("Invalid path: final array index used at non-array location")
+        while len(cur) <= last:
+            cur.append(None)
+        cur[last] = value
+    else:
+        if not isinstance(cur, dict):
+            raise TypeError("Invalid path: final object key used at non-object location")
+        cur[last] = value
 
 
 def parse_typed_value(value_type: str, value_text: str) -> Any:
