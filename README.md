@@ -24,6 +24,18 @@ jlq <file> --path <path> --value <value> [--type <type>] [--threads <n>] [--stri
 - `--threads <n>`: Number of worker threads (default: 1).
 - `--strict`: Fail fast on malformed JSON lines (exit code 3). Default is to skip them.
 
+### Examples
+Query lines where `network.http.status` equals `500`:
+
+```bash
+jlq data.jsonl --path network.http.status --type number --value 500
+```
+Query lines where the first item's `id` equals `42`:
+
+```bash
+jlq data.jsonl --path items.0.id --type number --value 42
+```
+
 ### Limitations
 - Path segments support object keys and numeric array indices.
 - Threading is not yet implemented; defaults to single-threaded operation.
