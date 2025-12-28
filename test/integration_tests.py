@@ -95,6 +95,37 @@ def test_crlf_handling(tmp_path: Path, jlq_bin: str | None) -> None:
     assert result.returncode == 0
     assert len(result.stdout.splitlines()) == 50
 
+
+def test_array_indexing(tmp_path: Path, jlq_bin: str | None) -> None:
+    """Tests numeric path segments as array indices (e.g. a.b.1.c)."""
+    binary = jlq_bin or "./build/debug/bin/jlq"
+    jsonl_file = tmp_path / "arrays.jsonl"
+
+    jsonl_file.write_text(
+        "{\"a\":{\"b\":[{\"c\":\"x\"},{\"c\":\"y\"}]}}\n"
+        "{\"a\":{\"b\":[{\"c\":\"y\"},{\"c\":\"x\"}]}}\n",
+        encoding="utf-8",
+    )
+
+    result = run_jlq([str(jsonl_file), "--path", "a.b.1.c", "--value", "y"], binary=binary)
+    assert result.returncode == 0
+    assert len(result.stdout.splitlines()) == 1
+
+
+def test_array_index_out_of_bounds_is_not_match(tmp_path: Path, jlq_bin: str | None) -> None:
+    """Out-of-bounds array indices should behave like a missing path (no match)."""
+    binary = jlq_bin or "./build/debug/bin/jlq"
+    jsonl_file = tmp_path / "arrays_oob.jsonl"
+
+    jsonl_file.write_text(
+        "{\"a\":{\"b\":[{\"c\":\"x\"}]}}\n",
+        encoding="utf-8",
+    )
+
+    result = run_jlq([str(jsonl_file), "--path", "a.b.5.c", "--value", "x"], binary=binary)
+    assert result.returncode == 0
+    assert result.stdout == ""
+
 def test_performance_smoke(tmp_path: Path, jlq_bin: str | None) -> None:
     """A smoke test for performance to ensure no major regressions."""
     # Use release binary if it exists, otherwise debug

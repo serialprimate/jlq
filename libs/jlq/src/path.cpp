@@ -1,11 +1,44 @@
 #include "path.hpp"
 
+#include <charconv>
 #include <stdexcept>
 
 namespace jlq
 {
 
-    std::vector<std::string_view> parseDotPath(std::string_view path)
+    namespace
+    {
+        [[nodiscard]] bool isAllDigits(std::string_view s) noexcept
+        {
+            if (s.empty())
+            {
+                return false;
+            }
+            for (const char c : s)
+            {
+                if (c < '0' || c > '9')
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        [[nodiscard]] std::size_t parseIndex(std::string_view s)
+        {
+            std::size_t value = 0;
+            const auto *begin = s.data();
+            const auto *end = s.data() + s.size();
+            const auto result = std::from_chars(begin, end, value);
+            if (result.ec != std::errc{} || result.ptr != end)
+            {
+                throw std::invalid_argument("--path contains an invalid array index");
+            }
+            return value;
+        }
+    } // namespace
+
+    std::vector<PathSegment> parseDotPath(std::string_view path)
     {
         if (path.empty())
         {
@@ -16,7 +49,7 @@ namespace jlq
             throw std::invalid_argument("--path must not start or end with '.'");
         }
 
-        std::vector<std::string_view> segments;
+        std::vector<PathSegment> segments;
         std::size_t start = 0;
         while (start < path.size())
         {
@@ -28,7 +61,15 @@ namespace jlq
                 throw std::invalid_argument("--path must not contain empty segments");
             }
 
-            segments.push_back(path.substr(start, end - start));
+            const std::string_view seg = path.substr(start, end - start);
+            if (isAllDigits(seg))
+            {
+                segments.push_back(PathSegment::indexSegment(parseIndex(seg)));
+            }
+            else
+            {
+                segments.push_back(PathSegment::keySegment(seg));
+            }
 
             if (dot == std::string_view::npos)
             {

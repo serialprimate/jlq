@@ -18,17 +18,17 @@ jlq <file> --path <path> --value <value> [--type <type>] [--threads <n>] [--stri
 - `<file>`: Path to a JSONL file.
 
 ### Options
-- `--path <path>`: Lookup path using dot-notation (e.g., `network.http.status`).
+- `--path <path>`: Lookup path using dot-notation (e.g., `network.http.status` or `items.0.id`).
 - `--value <value>`: The value to compare against.
 - `--type <type>`: How to interpret `--value`. Allowed: `string` (default), `number`, `bool`, `null`.
 - `--threads <n>`: Number of worker threads (default: 1).
 - `--strict`: Fail fast on malformed JSON lines (exit code 3). Default is to skip them.
 
 ### Limitations
-- Path segments are object keys only; no array indexing support in MVP.
+- Path segments support object keys and numeric array indices.
 - Threading is not yet implemented; defaults to single-threaded operation.
 - Designed for Linux; other OS support is not guaranteed.
-- The build targets aarch64 currently; x86_64 support is planned.
+- The build targets aarch64 currently; a x86_64 build is planned.
 
 ## Requirements
 

@@ -33,7 +33,7 @@ namespace jlq
             os << "Usage: jlq <file> --path <path> --value <value> [--type <type>] [--threads <n>] [--strict]\n";
             os << "\n";
             os << "Options:\n";
-            os << "  --path <path>       Dot-notation path (object keys only)\n";
+            os << "  --path <path>       Dot-notation path (keys + array indices, e.g. a.b.0.c)\n";
             os << "  --value <value>     Exact-match value (ignored for --type null)\n";
             os << "  --type <type>       string (default), number, bool, null\n";
             os << "  --threads <n>       Validate n >= 1 (stored; Phase 2 is single-threaded)\n";

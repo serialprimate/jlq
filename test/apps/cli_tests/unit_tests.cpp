@@ -76,9 +76,30 @@ JLQ_TEST_CASE("parseDotPath splits segments")
 {
     const auto segs = jlq::parseDotPath("a.b.c");
     JLQ_CHECK_EQ(segs.size(), static_cast<std::size_t>(3));
-    JLQ_CHECK_EQ(segs.at(0), std::string_view("a"));
-    JLQ_CHECK_EQ(segs.at(1), std::string_view("b"));
-    JLQ_CHECK_EQ(segs.at(2), std::string_view("c"));
+    JLQ_CHECK_EQ(segs.at(0).kind, jlq::PathSegmentKind::Key);
+    JLQ_CHECK_EQ(segs.at(0).key, std::string_view("a"));
+    JLQ_CHECK_EQ(segs.at(1).kind, jlq::PathSegmentKind::Key);
+    JLQ_CHECK_EQ(segs.at(1).key, std::string_view("b"));
+    JLQ_CHECK_EQ(segs.at(2).kind, jlq::PathSegmentKind::Key);
+    JLQ_CHECK_EQ(segs.at(2).key, std::string_view("c"));
+}
+
+JLQ_TEST_CASE("parseDotPath parses numeric segments as indices")
+{
+    const auto segs = jlq::parseDotPath("a.b.0.c");
+    JLQ_CHECK_EQ(segs.size(), static_cast<std::size_t>(4));
+
+    JLQ_CHECK_EQ(segs.at(0).kind, jlq::PathSegmentKind::Key);
+    JLQ_CHECK_EQ(segs.at(0).key, std::string_view("a"));
+
+    JLQ_CHECK_EQ(segs.at(1).kind, jlq::PathSegmentKind::Key);
+    JLQ_CHECK_EQ(segs.at(1).key, std::string_view("b"));
+
+    JLQ_CHECK_EQ(segs.at(2).kind, jlq::PathSegmentKind::Index);
+    JLQ_CHECK_EQ(segs.at(2).index, static_cast<std::size_t>(0));
+
+    JLQ_CHECK_EQ(segs.at(3).kind, jlq::PathSegmentKind::Key);
+    JLQ_CHECK_EQ(segs.at(3).key, std::string_view("c"));
 }
 
 JLQ_TEST_CASE("LineScanner splits on newline and preserves last line without newline")
@@ -136,6 +157,34 @@ JLQ_TEST_CASE("runQuery matches strings and preserves CRLF bytes")
     const auto status = jlq::runQuery(asBytes(input), cfg, out);
     JLQ_CHECK_EQ(status, jlq::QueryStatus::Ok);
     JLQ_CHECK_EQ(out.str(), std::string("{\"a\":{\"b\":\"x\"}}\r\n"));
+}
+
+JLQ_TEST_CASE("runQuery supports array indexing in paths")
+{
+    const std::string input = "{\"a\":{\"b\":[{\"c\":\"x\"},{\"c\":\"y\"}]}}\n";
+
+    jlq::QueryConfig cfg;
+    cfg.path_segments = jlq::parseDotPath("a.b.1.c");
+    cfg.value = std::string_view("y");
+
+    std::ostringstream out;
+    const auto status = jlq::runQuery(asBytes(input), cfg, out);
+    JLQ_CHECK_EQ(status, jlq::QueryStatus::Ok);
+    JLQ_CHECK_EQ(out.str(), input);
+}
+
+JLQ_TEST_CASE("runQuery treats out-of-bounds array index as non-match")
+{
+    const std::string input = "{\"a\":{\"b\":[{\"c\":\"x\"}]}}\n";
+
+    jlq::QueryConfig cfg;
+    cfg.path_segments = jlq::parseDotPath("a.b.5.c");
+    cfg.value = std::string_view("x");
+
+    std::ostringstream out;
+    const auto status = jlq::runQuery(asBytes(input), cfg, out);
+    JLQ_CHECK_EQ(status, jlq::QueryStatus::Ok);
+    JLQ_CHECK_EQ(out.str(), std::string(""));
 }
 
 JLQ_TEST_CASE("runQuery matches null without requiring a value")

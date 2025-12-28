@@ -3,7 +3,7 @@
 ## Project Overview
 - **jlq** is a high-performance C++23 command-line tool for querying large JSONL files using memory mapping and SIMD-accelerated parsing.
 - The codebase is modular, with clear separation between CLI logic, file mapping, and (future) JSON querying.
-- Phase 2 implements a single-threaded query engine using `simdjson` on-demand parsing, dot-notation path traversal (object keys only), and type-aware exact matching.
+- Phase 3 implements single-threaded querying using `simdjson` on-demand parsing, dot-notation path traversal (object keys + numeric array indices), and type-aware exact matching.
 
 ## Key Components
 - `libs/jlq/`: Core library code
@@ -38,7 +38,9 @@
 - **No in-source builds:** Building in the source directory is forbidden by CMakeLists.txt.
 
 ## Project-Specific Patterns
-- **CLI contract (Phase 2):** `jlq <file> --path <path> --value <value> [--type <type>] [--threads <n>] [--strict]` and `--help`.
+- **CLI contract (Phase 3):** `jlq <file> --path <path> --value <value> [--type <type>] [--threads <n>] [--strict]` and `--help`.
+- **Path traversal:** Dot-path segments that are all digits (e.g., `0`, `12`) are treated as array indices (e.g., `a.items.0.id`). All other segments are object keys.
+- **Array indexing performance:** On-demand array indexing is $O(N)$ in the index (reaching index $N$ may scan up to $N$ elements).
 - **Parsing safety:** Never parse directly from the `mmap` span; always copy each line to a scratch buffer sized `line_length + simdjson::SIMDJSON_PADDING` and zero-pad.
 - **Strict mode:** Default skips malformed/oversized lines; `--strict` fails fast with exit code 3.
 - **Error handling:** Uses RAII and exceptions for resource management and error propagation. Exit codes are standardized.

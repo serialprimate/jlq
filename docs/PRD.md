@@ -48,16 +48,16 @@ speed of the underlying hardware.
 - `<file>`: Path to a JSONL file.
 
 #### Options
-- `--path <path>`: Lookup path using dot-notation (e.g., `a.b.c`).
-  - Path segments are object keys only.
-  - **MVP limitation:** no array indexing support.
+- `--path <path>`: Lookup path using dot-notation (e.g., `a.b.c` or `a.b.0.c`).
+  - Segments consisting only of digits are interpreted as array indices.
+  - All other segments are interpreted as object keys.
 - `--value <value>`: The value to compare against.
 - `--type <type>`: How to interpret `--value`.
   - Allowed: `string` (default), `number`, `bool`, `null`.
   - For `bool`, accepted inputs: `true` or `false`.
   - For `null`, `--value` is ignored.
 - `--threads <n>`: Number of worker threads.
-  - Default: `1` in Phase 1–2, `std::thread::hardware_concurrency()` in Phase 3.
+  - Default: `1` in Phase 1–3, `std::thread::hardware_concurrency()` in Phase 4.
 - `--strict`: If set, any malformed JSON line causes a non-zero exit.
   - Default behavior: skip malformed lines.
 
@@ -109,6 +109,10 @@ For each line:
 
 **MVP approach (bounded memory):** copy each candidate line into a thread-local scratch buffer sized `line_length + SIMDJSON_PADDING`, append zero padding, then parse from that buffer. This preserves constant memory usage with respect to file size (bounded by maximum line length encountered).
 
+#### Array indexing performance
+Array traversal uses on-demand access and may require scanning up to $N$ elements to reach index $N$.
+In other words, array indexing is not random access and is $O(N)$ in the index.
+
 #### Concurrency & output
 In Phase 3, output ordering is **not guaranteed** (lines may be printed by threads as they are found). If stable ordering is later required, it must be specified and will require buffering/coordination.
 
@@ -129,7 +133,14 @@ In Phase 3, output ordering is **not guaranteed** (lines may be printed by threa
   3. Extract the value using `--path` traversal (dot-notation segments).
   4. Apply the exact-match rules in **2.4**.
 
-### Phase 3: Parallelisation (Hours 10-16)
+### Phase 3: Array Indexing (Hours 10-12)
+* **Goal:** Support numeric path segments for array traversal.
+* **Strategy:**
+  - Parse segments as either object keys or array indices.
+  - Traverse with type checks (object vs. array) and treat missing paths / type mismatches / out-of-bounds indices as non-matches.
+* **Performance:** array indexing is $O(N)$ in the index (see notes in **2.6**).
+
+### Phase 4: Parallelisation (Hours 12-16)
 * **Goal:** Use `std::jthread` to split the search across CPU cores.
 * **Strategy:** Divide the `mmap` region into chunks. Each thread finds the
   start of the next full line and processes until the end of its segment.
@@ -140,7 +151,6 @@ In Phase 3, output ordering is **not guaranteed** (lines may be printed by threa
 - No full `jq` expression language.
 - No regex, substring, glob, or numeric ranges.
 - No JSONPath features beyond simple dot-notation keys.
-- No array indexing.
 
 ## 5. Quality & Validation
 

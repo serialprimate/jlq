@@ -6,6 +6,8 @@
 #include <variant>
 #include <vector>
 
+#include "path.hpp"
+
 namespace jlq
 {
 
@@ -13,7 +15,7 @@ namespace jlq
 
     struct QueryConfig
     {
-        std::vector<std::string_view> path_segments;
+        std::vector<PathSegment> path_segments;
         QueryValue value{std::monostate{}};
         bool strict{false};
         std::size_t threads{1};

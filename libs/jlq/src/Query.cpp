@@ -28,7 +28,8 @@ namespace jlq
 
             // Non-fatal for query semantics: treat as non-match.
             if (ec == simdjson::NO_SUCH_FIELD || ec == simdjson::INCORRECT_TYPE ||
-                ec == simdjson::NUMBER_OUT_OF_RANGE || ec == simdjson::BIGINT_ERROR)
+                ec == simdjson::NUMBER_OUT_OF_RANGE || ec == simdjson::BIGINT_ERROR ||
+                ec == simdjson::INDEX_OUT_OF_BOUNDS)
             {
                 return MatchResult::NoMatch;
             }
@@ -92,38 +93,44 @@ namespace jlq
 
         MatchResult traverseAndMatch(simdjson::ondemand::document &doc, const QueryConfig &config)
         {
-            auto obj_res = doc.get_object();
-            if (obj_res.error())
+            simdjson::ondemand::value current = doc;
+            for (const PathSegment &seg : config.path_segments)
             {
-                return classifyError(obj_res.error());
+                if (seg.kind == PathSegmentKind::Key)
+                {
+                    auto obj_res = current.get_object();
+                    if (obj_res.error())
+                    {
+                        return classifyError(obj_res.error());
+                    }
+                    simdjson::ondemand::object obj = obj_res.value();
+
+                    auto field_res = obj.find_field_unordered(seg.key);
+                    if (field_res.error())
+                    {
+                        return classifyError(field_res.error());
+                    }
+                    current = field_res.value();
+                }
+                else
+                {
+                    auto arr_res = current.get_array();
+                    if (arr_res.error())
+                    {
+                        return classifyError(arr_res.error());
+                    }
+                    simdjson::ondemand::array arr = arr_res.value();
+
+                    auto elem_res = arr.at(seg.index);
+                    if (elem_res.error())
+                    {
+                        return classifyError(elem_res.error());
+                    }
+                    current = elem_res.value();
+                }
             }
 
-            simdjson::ondemand::object obj = obj_res.value();
-            for (std::size_t i = 0; i < config.path_segments.size(); ++i)
-            {
-                const std::string_view seg = config.path_segments[i];
-                auto field_res = obj.find_field_unordered(seg);
-                if (field_res.error())
-                {
-                    return classifyError(field_res.error());
-                }
-
-                simdjson::ondemand::value v = field_res.value();
-                const bool last = (i + 1 == config.path_segments.size());
-                if (last)
-                {
-                    return valueMatches(v, config.value);
-                }
-
-                auto next_obj_res = v.get_object();
-                if (next_obj_res.error())
-                {
-                    return classifyError(next_obj_res.error());
-                }
-                obj = next_obj_res.value();
-            }
-
-            return MatchResult::NoMatch;
+            return valueMatches(current, config.value);
         }
 
     } // namespace
@@ -155,7 +162,20 @@ namespace jlq
             std::memset(scratch.data() + json_len, 0, simdjson::SIMDJSON_PADDING);
 
             simdjson::ondemand::document doc;
-            const auto err = parser.iterate(scratch.data(), json_len, scratch.size()).get(doc);
+            simdjson::error_code err = simdjson::SUCCESS;
+            try
+            {
+                err = parser.iterate(scratch.data(), json_len, scratch.size()).get(doc);
+            }
+            catch (const simdjson::simdjson_error &)
+            {
+                if (config.strict)
+                {
+                    return QueryStatus::ParseError;
+                }
+                continue;
+            }
+
             if (err)
             {
                 if (config.strict)
@@ -165,7 +185,16 @@ namespace jlq
                 continue;
             }
 
-            const MatchResult result = traverseAndMatch(doc, config);
+            MatchResult result = MatchResult::Malformed;
+            try
+            {
+                result = traverseAndMatch(doc, config);
+            }
+            catch (const simdjson::simdjson_error &)
+            {
+                result = MatchResult::Malformed;
+            }
+
             if (result == MatchResult::Malformed)
             {
                 if (config.strict)
