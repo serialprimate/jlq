@@ -4,9 +4,9 @@ C++23 command-line tool for querying JSONL files.
 
 ## Motivation
 
-Developers and Data Engineers often work with massive (10GB+) JSONL files. Existing tools like `grep` lack structural awareness, leading to false positives, while high-level tools like `jq` are often CPU-bound and slow for multi-gigabyte streams.
+Developers and Data Engineers often work with massive (10GB+) JSONL files. Existing tools like `grep` lack structural awareness, leading to false positives, while high-level tools like `jq` are often CPU-bound and can be slower for multi-gigabyte streams.
 
-`jlq` is a lightweight C++ CLI utility that leverages Memory Mapping and SIMD-accelerated parsing to search and filter nested JSONL records at much faster speeds. It is not intended to be a full JSON processor like `jq`, but rather a specialized tool for efficiently querying large JSONL datasets.
+`jlq` is a lightweight C++ CLI utility that leverages Memory Mapping and SIMD-accelerated parsing to search and filter nested JSONL records at faster speeds. It is not intended to be a full JSON processor like `jq`, but rather a simpler specialized tool for efficiently querying larger JSONL datasets.
 
 ## Usage
 
@@ -23,6 +23,12 @@ jlq <file> --path <path> --value <value> [--type <type>] [--threads <n>] [--stri
 - `--type <type>`: How to interpret `--value`. Allowed: `string` (default), `number`, `bool`, `null`.
 - `--threads <n>`: Number of worker threads (default: 1).
 - `--strict`: Fail fast on malformed JSON lines (exit code 3). Default is to skip them.
+
+### Limitations
+- Path segments are object keys only; no array indexing support in MVP.
+- Threading is not yet implemented; defaults to single-threaded operation.
+- Designed for Linux; other OS support is not guaranteed.
+- The build targets aarch64 currently; x86_64 support is planned.
 
 ## Requirements
 
