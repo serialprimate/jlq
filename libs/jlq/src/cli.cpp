@@ -9,7 +9,6 @@
 
 #include <iostream>
 #include <charconv>
-#include <cstdlib>
 #include <cmath>
 #include <limits>
 #include <string>
@@ -36,7 +35,7 @@ namespace jlq
             os << "  --path <path>       Dot-notation path (keys + array indices, e.g. a.b.0.c)\n";
             os << "  --value <value>     Exact-match value (ignored for --type null)\n";
             os << "  --type <type>       string (default), number, bool, null\n";
-            os << "  --threads <n>       Validate n >= 1 (stored; Phase 2 is single-threaded)\n";
+            os << "  --threads <n>       Validate n >= 1 (stored; Phase 3 is single-threaded)\n";
             os << "  --strict            Malformed/oversized line => exit code 3\n";
             os << "  --help              Show this help\n";
         }
@@ -164,24 +163,21 @@ namespace jlq
                 return std::nullopt;
             }
 
-            // Convert with strtod (grammar already validated, so reject NaN/Inf forms by construction).
-            const std::string tmp(s);
-            char *end = nullptr;
-            errno = 0;
-            const double v = std::strtod(tmp.c_str(), &end);
-            if (end == nullptr || *end != '\0')
+            // Parse as double without allocating a temporary string.
+            // Grammar is already validated above, but we still require full consumption.
+            double value = 0.0;
+            const auto *begin = s.data();
+            const auto *end = s.data() + s.size();
+            const auto result = std::from_chars(begin, end, value, std::chars_format::general);
+            if (result.ec != std::errc{} || result.ptr != end)
             {
                 return std::nullopt;
             }
-            if (errno != 0)
+            if (!std::isfinite(value))
             {
                 return std::nullopt;
             }
-            if (!std::isfinite(v))
-            {
-                return std::nullopt;
-            }
-            return v;
+            return value;
         }
 
     } // namespace
