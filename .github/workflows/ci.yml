@@ -30,6 +30,9 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Ensure vcpkg cache directory exists
+      run: mkdir -p ~/.cache/vcpkg
+
     - name: Pre-cache vcpkg binary cache
       # We cache the vcpkg folder so it's available to the dev container
       uses: actions/cache@v4
