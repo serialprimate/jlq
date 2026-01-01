@@ -30,20 +30,6 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && update-ca-certificates --fresh
 
-# Set required docker setup parameters
-ARG DOCKER_GID=989
-
-# Install Docker CLI from Docker's official repository
-# - Add the docker group with the specified GID
-RUN install -m 0755 -d /etc/apt/keyrings \
-    && curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc \
-    && chmod a+r /etc/apt/keyrings/docker.asc \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends docker-ce-cli docker-buildx-plugin docker-compose-plugin \
-    && rm -rf /var/lib/apt/lists/* \
-    && groupadd --gid ${DOCKER_GID} docker
-
 # Install python development packages
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -86,7 +72,6 @@ RUN if id -u ${USER_UID} >/dev/null 2>&1; then \
     fi && \
     groupadd --gid ${USER_GID} ${USERNAME} \
     && useradd --uid ${USER_UID} --gid ${USER_GID} --create-home --password ${USER_PWCRYPT} ${USERNAME} \
-    && usermod -aG docker ${USERNAME} \
     && echo ${USERNAME} ALL=\(root\) ALL > /etc/sudoers.d/${USERNAME} \
     && chmod 0440 /etc/sudoers.d/${USERNAME}
 
